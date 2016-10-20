@@ -98,6 +98,7 @@ public class App {
     	ag = args;
     	if(Startup.startup()==false) {logger("Fail to loading file"); return;}
     	TelegramBot bot = TelegramBotAdapter.build(token);
+    	System.out.print(token);
     	bot.execute(new SendMessage("-1001063772015" , "*bot is again online on "+channel+".*\n"
     			+ "_[version: "+version+"]_\n")
     			.parseMode(ParseMode.Markdown).disableWebPagePreview(true));

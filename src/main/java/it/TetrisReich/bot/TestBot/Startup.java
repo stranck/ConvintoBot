@@ -12,9 +12,8 @@ import java.net.ConnectException;
 public class Startup {
 	 public static boolean startup() throws IOException {
 	    	App.logger("Starting up");
-	    	if(apiKey()&&!url()&&!chat()&&apiToken()) return false;
+	    	if(apiToken()&&apiKey()&&url()&&chat()) {/*Questa cosa orribile.*/} else return false;
 	    	admin(); all(); cLast(); idd(); kronos();
-	    	//dir();
 	    	if(!App.skipDefaultDirectory) App.dir = "/home/TelegramBot/YoutubeBot/" + App.channel + "/";
 	    	App.logger("\nTelegram channel: " + App.channel + "\n Telegram api: " + App.api);
 	    	File f = new File("text");
@@ -25,7 +24,6 @@ public class Startup {
 		    	App.textEsist = false;
 		    }   
 	    	if(App.textEsist) Chan.chanSP();
-	    	//logger(reader("chat") + "   " + reader("api"));
 	    	App.logger("TextEsist: " + App.textEsist);
 	    	return true;
 	    }
@@ -55,7 +53,6 @@ public class Startup {
 	    public static boolean url() throws IOException{
 	    	File f = new File("channelID");
 	    	if(f.exists() && !f.isDirectory()) { 
-	    		//channel = reader("api");
 	    		App.api = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId="+
 	        		(FileO.reader("channelID"))+
 	    			"&order=date&key=" + App.key + "&maxResults=";
@@ -91,6 +88,7 @@ public class Startup {
 	    public static boolean apiToken() throws IOException{
 	    	File f = new File("token");
 	    	if(f.exists() && !f.isDirectory()) { 
+	    		//String s = FileO.reader("token");
 	    		App.token = FileO.reader("token");
 	    		App.logger("File \"token\" loaded successfully.");
 	    	} else {
