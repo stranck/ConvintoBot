@@ -276,7 +276,7 @@ public class MyRunnable implements Runnable {
     		catch(RuntimeException | IOException e){e.printStackTrace();}
     		
     		tesThread++;
-			if(App.s) return; if(tesThread==32){if(App.mainT==false){
+			if(App.s) return; if(tesThread==32){if(!App.mainT){
 						System.out.println("Detect crash of main thread. Restarting the bot.");
 						return;
 					}else{tesThread=0;App.mainT=false;}}

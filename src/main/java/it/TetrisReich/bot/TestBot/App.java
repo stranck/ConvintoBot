@@ -6,7 +6,6 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 
 import it.TetrisReich.bot.TestBot.Download;
@@ -96,7 +95,7 @@ public class App {
         	}
     	}
     	ag = args;
-    	if(Startup.startup()==false) {logger("Fail to loading file"); return;}
+    	if(!Startup.startup()) {logger("Fail to loading file"); return;}
     	TelegramBot bot = TelegramBotAdapter.build(token);
     	System.out.print(token);
     	bot.execute(new SendMessage("-1001063772015" , "*bot is again online on "+channel+".*\n"
@@ -118,7 +117,7 @@ public class App {
     		try{
     		nTotalCheck++;
     		altervistamerda++;	
-    		if(tesThread==4){if(secondT==false){
+    		if(tesThread==4){if(!secondT){
     					System.out.println("Detect crash of second thread. Restarting the bot.");
     					return; 
     			}else {tesThread = 0; secondT = false;}}
@@ -132,14 +131,14 @@ public class App {
     		}
 			if(checKill()||Jar.update()) {
     			String text;
-    			if(crash==false) text = channel + "> Terminated by admin."; else text = channel + "> Updating bot.";
+    			if(!crash) text = channel + "> Terminated by admin."; else text = channel + "> Updating bot.";
     	    	bot.execute(new SendMessage("-1001063772015" , text
     	    			+ "\n_[version: "+version+"]_\n")
     	    			.parseMode(ParseMode.Markdown).disableWebPagePreview(true));
     			s = true;
     			return;
     		} else altervistamerda = 0;}
-    		if(stat==true){
+    		if(stat){
     			logger("\nTotal number of check: " + nTotalCheck);
     			logger("Total number of check of video update: " + nVCheck);
     			logger("Total number of check of live update: " + nLCheck);
@@ -218,7 +217,7 @@ public class App {
     	fileCn = FileO.reader("id");
     	if(!id.equals(fileCn)) temp = true;
     	Convinti = fileCn;
-    	if(comp==true)logger(" " + temp);
+    	if(comp)logger(" " + temp);
     	return temp;
     }
     public static String getInfo(int n) throws JSONException{
