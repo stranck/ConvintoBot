@@ -148,8 +148,8 @@ public class MyRunnable implements Runnable {
     							"Location: " + App.dir + "\n" +
     							"Startup argouments: " + Arrays.toString(App.ag) + "\n" +
     							"Uptime: "+hours+":"+mins+":"+secs+"(From "+App.startTime+")\n\n"+
-    							"Programmed by [Stranck](www.youtube.com/channel/UCmMWUz0QZ7WhIBx-1Dz-IGg)"
-						).parseMode(ParseMode.Markdown).disableWebPagePreview(true));
+    							"Programmed by <a href=\"www.youtube.com/channel/UCmMWUz0QZ7WhIBx-1Dz-IGg\">Stranck</a>"
+						).parseMode(ParseMode.HTML).disableWebPagePreview(true));
     					App.logger(message.chat().id().toString()+"> Request stat page");
     				}
     				try{
@@ -172,7 +172,7 @@ public class MyRunnable implements Runnable {
     							Random generator = new Random();
     							int rand = 97 + generator.nextInt(26);
     							String s = Character.toString((char)rand);
-    							FileO.writer(s, "id");
+    							FileO.	writer(s, "id");
     							bot.execute(new SendMessage(message.chat().id().toString(),
     									"Forcing video update with: " + s));
     						}

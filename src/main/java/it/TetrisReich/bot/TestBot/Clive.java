@@ -20,10 +20,9 @@ public class Clive extends Thread{
 			JSONArray arr = obj.getJSONArray("items");
 			obj = arr.getJSONObject(0);
 			if(obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("none")){
-				App.liveEnd = "";
 				App.liveEnd = "<a href=\""
-						+obj.getJSONObject("snippet").getJSONObject("localized").getString("title")+"\">"
-						+App.threadst2+"</a>";
+						+FileO.toHtml(obj.getJSONObject("snippet").getJSONObject("localized").getString("title"))
+						+"\">"+App.threadst2+"</a>";
 				App.liveFinish = 1;
 				App.logger("false");
 			} else {
@@ -42,6 +41,8 @@ public class Clive extends Thread{
 			if(incoming&&obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("live")){
 				App.cristoEVenuto = true;
 				incoming = false;
+				App.liveEnd = FileO.toHtml(obj.getJSONObject("snippet")
+						.getJSONObject("localized").getString("title"));
 				return false;
 			}
 			if(obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("upcoming")){

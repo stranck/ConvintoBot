@@ -187,9 +187,9 @@ public class App {
     			if(liveFinish==1) {
     				loggerL("Editing ending live message " + mesasge_id + " in channel: " + channel +
     						" with: " + liveEnd + "...");
-					BaseResponse bs = bot.execute(new EditMessageText(channel, mesasge_id, "[Live terminata]\n"
+    				bot.execute(new EditMessageText(channel, mesasge_id, "[Live terminata]\n"
     						+liveEnd).parseMode(ParseMode.HTML).disableWebPagePreview(true));
-					logger(bs.toString());
+					//logger(bs.toString());
     				logger("Done!");
 					liveFinish = 0;
 					}
@@ -197,7 +197,7 @@ public class App {
     			if(cristoEVenuto){
     				inLive = true;
     				bot.execute(new EditMessageText(channel, mesasge_id,
-							Chan.chan()+"\n<a href=\"" + threadst2 + "\">" + name + "</a>")
+							Chan.chan()+"\n<a href=\"" + threadst2 + "\">" + liveEnd + "</a>")
 							.parseMode(ParseMode.HTML));
     				inLive = false;
     				cristoEVenuto = false;
@@ -229,7 +229,6 @@ public class App {
     		JSONArray arr = obj.getJSONArray("items");
     		obj = arr.getJSONObject(n);
     		result = obj.getJSONObject("id").getString("videoId");
-    		name = "";
     		name = FileO.toHtml(obj.getJSONObject("snippet").getString("title"));
     		if(
     				obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("live")||
