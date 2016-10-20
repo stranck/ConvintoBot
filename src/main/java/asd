@@ -1,0 +1,44 @@
+		String server = "www.myserver.com";
+		int port = 21;
+		String user = "user";
+		String pass = "pass";
+		
+		FTPClient ftpClient = new FTPClient();
+		try {
+		
+			ftpClient.connect(server, port);
+			ftpClient.login(user, pass);
+			ftpClient.enterLocalPassiveMode();
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+		
+
+		String remoteFile1 = "/test/video.mp4";
+		File downloadFile1 = new File("D:/Downloads/video.mp4");
+		OutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile1));
+		boolean success = ftpClient.retrieveFile(remoteFile1, outputStream1);
+		outputStream1.close();
+				if (success) {
+		System.out.println("File #1 has been downloaded successfully.");
+		}
+		
+		} catch (IOException ex) {
+		System.out.println("Error: " + ex.getMessage());
+		ex.printStackTrace();
+		} finally {
+		try {
+		if (ftpClient.isConnected()) {
+		ftpClient.logout();
+		ftpClient.disconnect();
+		}
+		} catch (IOException ex) {
+		ex.printStackTrace();
+		}
+		}
+
+		
+		
+		    <dependency>
+    <groupId>commons-net</groupId>
+    <artifactId>commons-net</artifactId>
+    <version>3.3</version>
+</dependency>
