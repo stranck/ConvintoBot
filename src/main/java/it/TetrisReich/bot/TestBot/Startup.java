@@ -2,6 +2,7 @@ package it.TetrisReich.bot.TestBot;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 /*import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -12,7 +13,7 @@ import java.net.ConnectException;
 public class Startup {
 	 public static boolean startup() throws IOException {
 	    	App.logger("Starting up");
-	    	if(apiToken()&&apiKey()&&url()&&chat()) {/*Questa cosa orribile.*/} else return false;
+	    	if(apiToken()&&apiKey()&&url()&&chat()&&botName()) {/*Questa cosa orribile.*/} else return false;
 	    	admin(); all(); cLast(); idd(); kronos();
 	    	if(!App.skipDefaultDirectory) App.dir = "/home/TelegramBot/YoutubeBot/" + App.channel + "/";
 	    	App.logger("\nTelegram channel: " + App.channel + "\n Telegram api: " + App.api);
@@ -40,8 +41,12 @@ public class Startup {
 	    }
 	    public static void all(){
 	    	File f = new File("all");
-	    	if(f.exists() && !f.isDirectory()) { 
-	    		FileO.writer(App.getInfo(1), "all");
+	    	if(f.exists() && !f.isDirectory()) {
+	    		String s = "";
+	    		do{
+	    			s = App.getInfo(1);
+	    		}while(s==null);
+	    		FileO.writer(s, "all");
 	    		App.logger("File \"all\" loaded successfully.");
 	    	} else {
 	    		App.logger("File \"all\" not found. Creating it.");
@@ -108,6 +113,17 @@ public class Startup {
 	    	}
 	    	return true;
 	    }
+	    public static boolean botName() throws IOException{
+	    	File f = new File("name");
+	    	if(f.exists() && !f.isDirectory()) { 
+	    		App.botName = FileO.reader("name");
+	    		App.logger("File \"name\" loaded successfully.");
+	    	} else {
+	    		App.logger("Fail to load the file \"name\"");
+	    		return false;
+	    	}
+	    	return true;
+	    }
 	    public static void kronos(){
 	    	File f = new File("kronos");
 	    	if(f.exists() && !f.isDirectory()) { 
@@ -128,7 +144,7 @@ public class Startup {
 	    		App.logger("File \"admin\" created and loaded successfully.");
 	    	}
 	    }
-	    public static boolean check() throws ConnectException {
+	    public static boolean check() throws ConnectException, InvocationTargetException {
 	    	App.loggerL("Check if this chat is allowed: ");
 	    	App.secret = true;
 	    	String[] result = Download.dwn("http://stranckutilies.altervista.org/allowed").split(";");

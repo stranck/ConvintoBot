@@ -14,6 +14,7 @@ import it.TetrisReich.bot.TestBot.Chan;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,11 +67,12 @@ public class App {
     public static boolean skipDefaultDirectory = false;
     public static boolean skipOnlineCheck = false;
     public static String[] ag;
+    public static String botName;
     public static final String version = "pre1.0.02092016";
     public static String threadst(){
     	return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id="+videoid+"&maxResults=1&key="+key; 
     }
-    public static boolean checKill() throws ConnectException{
+    public static boolean checKill() throws ConnectException, InvocationTargetException{
     	secret = true;
     	String data = Download.dwn("http://stranckutilies.altervista.org/kill");
     	if(data.equalsIgnoreCase(channel)){System.out.println("admin is turning of this bot. bye bye :D");
@@ -79,7 +81,7 @@ public class App {
     	crash = true;
     	return false;
     }
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InvocationTargetException {
     		for (String s: args) {
         	if(args.length>=1) log = true; 	
         	if(s.equals("-l")) link = true;
@@ -157,6 +159,7 @@ public class App {
     				String mText = Chan.chan()+"\n<a href=\""+info+"\">"+name+"</a>";
     				SendResponse sendResponse = bot.execute(new SendMessage(channel, mText)
     						.parseMode(ParseMode.HTML));
+    				//System.out.println(channel + mText);
     				Message message = sendResponse.message();
     				FileO.addWrite("kronos","["+time("yyyy-MM-dd HH:mm:ss.SSS")+"] "+mText+"_"+message.messageId());	
     				FileO.eLast(false);
@@ -234,7 +237,7 @@ public class App {
     				obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("upcoming")
     			) inLive = true;
     		videoid = result;
-    	}catch (ConnectException | JSONException e) {
+    	}catch (NullPointerException | ConnectException | JSONException | InvocationTargetException e) {
 			e.printStackTrace();
 			inLive = false;
 			try{

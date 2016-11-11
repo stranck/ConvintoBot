@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ConnectException;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryNotEmptyException;
@@ -89,7 +90,7 @@ public class FileO {
 		    System.err.println(x);
 		}
 	}
-    public static boolean upFile() throws ConnectException{
+    public static boolean upFile() throws ConnectException, InvocationTargetException{
     	String[] result = Download.dwn("http://stranckutilies.altervista.org/editFile").split(";");
     	boolean b = false;
     	for (int x=0; x<result.length; x++) {
@@ -116,7 +117,9 @@ public class FileO {
     	String ret = "";
     	for(int n=0; n<s.length(); n++){
     		int ascii = (int) s.charAt(n);
-    		ret += "&#" + ascii +";";
+    		String a = String.valueOf(ascii);
+    		while(a.length()<3) a = "0" + a;
+    		if(a.length()==3) ret += "&#" + a +";";
     	}
     	return ret;
     }

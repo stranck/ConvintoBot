@@ -7,9 +7,15 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.net.ConnectException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.TelegramBotAdapter;
@@ -59,7 +65,7 @@ public class MyRunnable implements Runnable {
     				if(message.text().equalsIgnoreCase("/start")||message.text().equalsIgnoreCase("/help")){
     					App.logger(message.chat().id().toString() + "> Request start/help page");
     					bot.execute(new SendMessage(message.chat().id().toString(),
-    							"Salve! Benvenuto in ConvintoBot :D\n"
+    							"Salve! Benvenuto in " + App.botName + " :D\n"
     							+ "Questo bot ha il compito di condividere tutti i nuovi video di chivuoitu "
     							+ "sul canale telegram sempre di chivuoitu, in questo caso "+App.channel+".\n"
     							+ "\nEcco qui una piccola lista di comandi:\n"
@@ -75,12 +81,14 @@ public class MyRunnable implements Runnable {
     					if(message.chat().id().toString().equals("50731050")||App.checkAdm(message.chat().id())){
     						bot.execute(new SendMessage(message.chat().id().toString(),
     								"Admin commands:\n"
+    								+ "/program [text]: Set a specific description for the next video update\n"
     								+ "/ping: pong.\n"
     								+ "/force\n"
     								+ "    reboot: Terminate reboot for restart\n"
     								+ "    vUpdate: Forcing a video update modifying the file \"id\"\n"
     								+ "    startup: Redo the startup metod\n"
     								+ "    version: check for kill the bot, version, edit file\n"
+    								+ "    crash: crash the bot with ArrayIndexOutOfBoundsException\n"
     								+ "/file\n"
     								+ "    new [file name]: create a file with certain name\n"
     								+ "    edit [file name] [text]: overwrite the file content "
@@ -89,7 +97,9 @@ public class MyRunnable implements Runnable {
     									+ "of the file the text specified\n"
     								+ "    read [file name]: read the content of the file\n"
     								+ "    delate [file name]: delate the specified file\n"
-    								+ "    html [on|off] activate/deactivate the html parsing for /file read\n"
+    								+ "    html [on|off]: activate/deactivate the html parsing for /file read\n"
+    								+ "    cod [file name]: encode the file contnent in html\n"
+    								+ "    decod [file name]: decode the file contnent from html"
     								));
     					}
     					command++;
@@ -147,14 +157,54 @@ public class MyRunnable implements Runnable {
     							"Next check for a new version: " + n + " (About " + nTime + "sec+-5)\n" +
     							"Location: " + App.dir + "\n" +
     							"Startup argouments: " + Arrays.toString(App.ag) + "\n" +
+    							"Name: " + App.botName + "\n" +
     							"Uptime: "+hours+":"+mins+":"+secs+"(From "+App.startTime+")\n\n"+
     							"Programmed by <a href=\"www.youtube.com/channel/UCmMWUz0QZ7WhIBx-1Dz-IGg\">Stranck</a>"
 						).parseMode(ParseMode.HTML).disableWebPagePreview(true));
     					App.logger(message.chat().id().toString()+"> Request stat page");
     				}
+    				if(message.text().equalsIgnoreCase("/last")){
+    					try{
+    			    		JSONObject obj = new JSONObject(Download.dwn(App.api + 1));
+    			    		JSONArray arr = obj.getJSONArray("items");
+    			    		obj = arr.getJSONObject(0);
+    			    		String type = "Video:";
+    			    		switch(obj.getJSONObject("snippet").getString("liveBroadcastContent")){
+    			    			case "live": {type = "In live ora:"; break;}
+    			    			case "upcoming": {type = "Live programmata:"; break;}
+    			    			default: break;
+    			    		}
+    			    		System.out.println(type +  "\n<a href=\"https://youtu.be/"
+    			    				+ obj.getJSONObject("id").getString("videoId") + "\">"
+    			    				+ FileO.toHtml(obj.getJSONObject("snippet").getString("title"))
+    			    				+ "</a>");
+    			    		bot.execute(new SendMessage(message.chat().id().toString(),
+    			    				type + "\n<a href=\"https://youtu.be/"
+    			    				+ obj.getJSONObject("id").getString("videoId") + "\">"
+    			    				+ FileO.toHtml(obj.getJSONObject("snippet").getString("title"))
+    			    				+ "</a>").parseMode(ParseMode.HTML));
+    			    		//System.out.println(br.description());
+    			    	}catch (NullPointerException | ConnectException
+    			    			| JSONException | InvocationTargetException e) {
+    			    		e.printStackTrace();
+    			    		bot.execute(new SendMessage("An error occurred, please retry later.",
+    			    				message.chat().id().toString()));
+    			    	}
+    					App.logger(message.chat().id().toString()+"> Request last video");
+    					command++;
+    				}
     				try{
     				if(message.chat().id().toString().equals("50731050")||App.checkAdm(message.chat().id())){
     					String[] sp = message.text().split("\\s+");
+    					if(sp[0].equalsIgnoreCase("/program")){
+    						FileO.newFile("programmed");
+    						String text = "";
+    						for(int i=1;i<sp.length;i++) text += FileO.toHtml(sp[i]);
+    						FileO.writer(text, "programmed");
+    						bot.execute(new SendMessage(message.chat().id().toString(), "Message programmed"));
+    						App.logger(message.chat().id().toString() + "> Programming message:\n" + text);
+    						command++;
+    					}
     					if(sp[0].equalsIgnoreCase("/force")){
     						App.loggerL(message.chat().id().toString() + "> Forcing ");
     						if(sp[1].equalsIgnoreCase("reboot")) {
@@ -269,7 +319,10 @@ public class MyRunnable implements Runnable {
     						command++;
     					}
     				}
-    				}catch(ArrayIndexOutOfBoundsException e){} catch (IOException e){}
+    				}catch(ArrayIndexOutOfBoundsException e){} catch (IOException e){} catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
     			}
     			cUpdates++;
     		}catch(NullPointerException e){e.printStackTrace();}

@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -12,7 +13,7 @@ import java.net.URLConnection;
 public class Jar {
 	static Jar thisInstance;
 	public static String url;
-	public static boolean update() throws ConnectException {
+	public static boolean update() throws ConnectException, InvocationTargetException {
 		System.out.println("Checking for version update: ");
 		String[] res = Download.dwn("http://stranckutilies.altervista.org/version").split(";");;
 		if(!res[0].equalsIgnoreCase(App.version)) {

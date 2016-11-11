@@ -4,13 +4,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import it.TetrisReich.bot.TestBot.App;
 
 public class Download {
-	public static String dwn(String apii) throws ConnectException{
+	public static String dwn(String apii) throws ConnectException, InvocationTargetException{
 	boolean first = false;
 	String check = null;
 	URL url;

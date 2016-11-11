@@ -11,6 +11,7 @@ import it.TetrisReich.bot.TestBot.App;
 
 public class Chan {
 	public static String chan() throws IOException{
+		if(!FileO.exist("programmed")){
 		if(!App.textEsist) if(App.inLive) return "In live ora:"; else  return "Nuovo video:";
 		Random generator = new Random();
 		int rand;
@@ -28,7 +29,7 @@ public class Chan {
 		    		rand--;
 		    	}
 		    }
-		}
+		}} else {String s = FileO.aL("programmed", false); FileO.delater("programmed"); return s;}
 		return null;
 	}
 	public static void chanSP() throws IOException{
