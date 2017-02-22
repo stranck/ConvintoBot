@@ -9,13 +9,17 @@ import java.net.URL;
 import java.net.URLDecoder;*/
 import java.net.ConnectException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class Startup {
 	 public static boolean startup() throws IOException {
 	    	App.logger("Starting up");
 	    	if(apiToken()&&apiKey()&&url()&&chat()&&botName()) {/*Questa cosa orribile.*/} else return false;
-	    	admin(); all(); cLast(); idd(); kronos();
-	    	if(!App.skipDefaultDirectory) App.dir = "/home/TelegramBot/YoutubeBot/" + App.channel + "/";
+	    	admin(); cLast(); kronos(); all();
+	    	if(!App.skipDefaultDirectory) App.dir = System.getProperty("user.dir");
 	    	App.logger("\nTelegram channel: " + App.channel + "\n Telegram api: " + App.api);
 	    	File f = new File("text");
 		    if(f.exists() && !f.isDirectory()) { 
@@ -28,39 +32,35 @@ public class Startup {
 	    	App.logger("TextEsist: " + App.textEsist);
 	    	return true;
 	    }
-	    public static void idd(){
-	    	File f = new File("id");
-	    	if(f.exists() && !f.isDirectory()) { 
-	    		FileO.writer(App.getInfo(0), "id");
-	    		App.logger("File \"id\" loaded successfully.");
-	    	} else {
-	    		App.logger("File \"id\" not found. Creating it.");
-	    		FileO.newFile("id");
-	    		App.logger("File \"id\" created and loaded successfully.");
+	    public static void all() throws IOException{
+	    	JSONArray arr;
+	    	while(true){
+	    		try{
+	    			JSONObject obj = new JSONObject(Download.dwn(App.api + 16));
+		    		arr = obj.getJSONArray("items");
+		    		break;
+	    		}catch (NullPointerException | ConnectException | JSONException | InvocationTargetException e) {
+	    			e.printStackTrace();
+	    			try{
+	        		    Thread.sleep(5000);
+	        		} catch(InterruptedException ex){
+	        		    Thread.currentThread().interrupt();
+	        		}
+	    		}
 	    	}
-	    }
-	    public static void all(){
-	    	File f = new File("all");
-	    	if(f.exists() && !f.isDirectory()) {
-	    		String s = "";
-	    		do{
-	    			s = App.getInfo(1);
-	    		}while(s==null);
-	    		FileO.writer(s, "all");
-	    		App.logger("File \"all\" loaded successfully.");
-	    	} else {
-	    		App.logger("File \"all\" not found. Creating it.");
-	    		FileO.newFile("all");
-	    		FileO.writer(App.getInfo(1), "all");
-	    		App.logger("File \"all\" created and loaded successfully.");
-	    	} 	
+	    	for(int i=0; i<16; i++){
+	    		String s =  "https://youtu.be/" + arr.getJSONObject(i).getJSONObject("id").getString("videoId");
+	    		if(App.all!=null) App.all = App.push(App.all, s); else App.all = new String[]{s};
+	    		//FileO.writer(FileO.reader("all") + ";" + s, "all");
+	    	}
+	    	App.logger("Array \"all\" loaded successfully.");
 	    }
 	    public static boolean url() throws IOException{
 	    	File f = new File("channelID");
 	    	if(f.exists() && !f.isDirectory()) { 
 	    		App.api = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId="+
 	        		(FileO.reader("channelID"))+
-	    			"&order=date&key=" + App.key + "&maxResults=";
+	    			"&order=date&type=video&key=" + App.key + "&maxResults=";
 	    		App.logger("File \"channelID\" loaded successfully.");
 	    	} else {
 	    		App.logger("Fail to load the file \"channelID\"");

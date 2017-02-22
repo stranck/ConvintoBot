@@ -13,10 +13,12 @@ import it.TetrisReich.bot.TestBot.MyRunnable;
 import it.TetrisReich.bot.TestBot.Chan;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ConnectException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.json.*;
@@ -31,7 +33,6 @@ public class App {
 	public static boolean inLive = false;
 	public static String fileCn;
 	public static boolean log = false;
-	public static String Convinti;	
 	public static String name;
 	public static boolean textEsist = true;
 	public static String channel;
@@ -68,6 +69,8 @@ public class App {
     public static boolean skipOnlineCheck = false;
     public static String[] ag;
     public static String botName;
+    public static String[] all;
+    public static String last = "";
     public static final String version = "pre1.0.02092016";
     public static String threadst(){
     	return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id="+videoid+"&maxResults=1&key="+key; 
@@ -82,18 +85,21 @@ public class App {
     	return false;
     }
 	public static void main(String[] args) throws IOException, InvocationTargetException {
-    		for (String s: args) {
-        	if(args.length>=1) log = true; 	
-        	if(s.equals("-l")) link = true;
-        	if(s.equals("-c")) comp = true;
-        	if(s.equals("-s")) stat = true;
-        	if(s.equals("-d")) skipDefaultDirectory = true;
-        	if(s.equals("-ml"))moveLog();
-        	if(s.equals("-o")) skipOnlineCheck = true;
-        	if(s.equals("-a")) {
-        		stat = true;
-        		comp = true;
-        		link = true;
+    	if(args.length>=1) log = true;	
+		for (String s: args) {
+        	switch(s){
+        		case("-l"): link = true;
+        		case("-c"):	comp = true;
+        		case("-s"): stat = true;
+        		case("-d"): skipDefaultDirectory = true;
+        		case("-ml"):moveLog();
+        		case("-o"): skipOnlineCheck = true;
+        		case("-a"): {
+            		stat = true;
+            		comp = true;
+            		link = true;
+            	}
+        		default: break;
         	}
     	}
     	ag = args;
@@ -149,12 +155,12 @@ public class App {
     		} if(s) return;
     		String info = getInfo(0);
     		if(info!=null){
-    		logger("Actual id: " + Convinti + "\nId saved: " + FileO.reader("all"));
+    		logger("Actual id: " + info + "\nId saved: " + Arrays.toString(all));
     		if(liveFinish<3){
     			//System.out.println("min");
     			nVCheck++;
     			loggerL("\nChecking for new video: ");
-    			if(ytupd(info)&&!info.equals(FileO.reader("all"))){
+    			if(!oldId(info)){
     				nVUpdate++;
     				String mText = Chan.chan()+"\n<a href=\""+info+"\">"+name+"</a>";
     				SendResponse sendResponse = bot.execute(new SendMessage(channel, mText)
@@ -167,8 +173,8 @@ public class App {
     						.parseMode(ParseMode.HTML)
     						.disableWebPagePreview(true));
     				FileO.writer(mText + "@" + message.messageId(), "Last");
-    				FileO.writer(Convinti, "all");
-    				FileO.writer(info, "id");
+    				all = push(all, info);
+    				//FileO.writer(FileO.reader("all") + ";" + info, "all");
     				logger("true\n");
     				if(inLive) {
     					logger("Live founded!");
@@ -208,26 +214,18 @@ public class App {
     		inLive = false;
     		} catch(IOException e) {e.printStackTrace();}
     		try{
-    		    Thread.sleep(5000);
+    		    Thread.sleep(10000);
     		} catch(InterruptedException ex){
     		    Thread.currentThread().interrupt();
     		} tesThread++;	
     	}
     }
-    public static boolean ytupd(String id) throws IOException{
-    	loggerL("Checking for an id change:");
-    	boolean temp = false;
-    	fileCn = FileO.reader("id");
-    	if(!id.equals(fileCn)) temp = true;
-    	Convinti = fileCn;
-    	if(comp)logger(" " + temp);
-    	return temp;
-    }
     public static String getInfo(int n) throws JSONException{
     	int i = n + 1;
     	String result = "";
     	try{
-    		JSONObject obj = new JSONObject(Download.dwn(api + i));
+    		last = Download.dwn(api + i);
+    		JSONObject obj = new JSONObject(last);
     		JSONArray arr = obj.getJSONArray("items");
     		obj = arr.getJSONObject(n);
     		result = obj.getJSONObject("id").getString("videoId");
@@ -254,12 +252,26 @@ public class App {
     	loggerL("Moving log from CB_old.txt to log/CB");
     	while(true){
     		if(!FileO.exist("log/CB" + i + ".txt")){
-    			File f = new File("CB_old.txt");
-    			f.renameTo(new File("log/CB" + i + ".txt"));
+    			FileO.rename("CB_old.txt", "log/CB" + i + ".txt");
     			logger(i + ".txt");
     			return;
     		} i++;
     	}
+    }
+    public static boolean oldId(String id) throws FileNotFoundException, IOException{
+    	for(int i=0; i<all.length; i++) if(id.equals(all[i])) return true;
+    	return false;
+    }
+    public static String[] push(String[] array, String push) {
+        String[] longer = new String[array.length + 1];
+        for (int i = 0; i < array.length; i++) longer[i] = array[i];
+        longer[array.length] = push;
+        return longer;
+    }
+    public static String[] remove(String[] array, String remove) {
+        String[] shorter = new String[array.length - 1];int n = 0;
+        for (int i = 0; i < array.length; i++) if(!array[i].equals(remove)){shorter[n] = array[i]; n++;}
+        return shorter;
     }
     public static boolean checkAdm(Long id) throws IOException{
     	String[] s = FileO.aL("admin", false).split(";");
@@ -270,7 +282,7 @@ public class App {
         SimpleDateFormat sdfDate = new SimpleDateFormat(format);
         Date now = new Date();
         String strDate = sdfDate.format(now);
-        return strDate;
+        return strDate;	
     }
     public static void logger(String testo){
     	String s = "";

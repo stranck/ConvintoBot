@@ -8,10 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,14 +68,13 @@ public class MyRunnable implements Runnable {
     							+ "Questo bot ha il compito di condividere tutti i nuovi video di chivuoitu "
     							+ "sul canale telegram sempre di chivuoitu, in questo caso "+App.channel+".\n"
     							+ "\nEcco qui una piccola lista di comandi:\n"
+    							+ "/last per ottenere l'ultimo mio video.\n"
     							+ "/github per ottenere il link di github del mio codice.\n"
     							+ "/start o /help per visualizzare questo messaggio.\n"
     							+ "/news per ricevere le notizie su questo ed altri bot del mio creatore.\n	"
     							+ "/stat per vedere le statistiche della sessione corrente del bot.\n\n"
-    							+ "Se vuoi maggiori informazioni o se vuoi usarmi per il tuo canale youtube "
-    							+ "contattami "
-    							+ "[qui](https://www.youtube.com/channel/UCmMWUz0QZ7WhIBx-1Dz-IGg/about), "
-    							+ "tramite messaggio privato su youtube."
+    							+ "Per bug report, maggiori informazioni o se vuoi usarmi per il "
+    							+ "tuo canale youtube contattami per email qui: public.stranck@gmail.com"
     							).parseMode(ParseMode.Markdown).disableWebPagePreview(true));
     					if(message.chat().id().toString().equals("50731050")||App.checkAdm(message.chat().id())){
     						bot.execute(new SendMessage(message.chat().id().toString(),
@@ -99,7 +97,8 @@ public class MyRunnable implements Runnable {
     								+ "    delate [file name]: delate the specified file\n"
     								+ "    html [on|off]: activate/deactivate the html parsing for /file read\n"
     								+ "    cod [file name]: encode the file contnent in html\n"
-    								+ "    decod [file name]: decode the file contnent from html"
+    								+ "    decod [file name]: decode the file contnent from html\n"
+    								+ "    ls [path]: get list of all files in the select path. Use '.' for default"
     								));
     					}
     					command++;
@@ -165,7 +164,7 @@ public class MyRunnable implements Runnable {
     				}
     				if(message.text().equalsIgnoreCase("/last")){
     					try{
-    			    		JSONObject obj = new JSONObject(Download.dwn(App.api + 1));
+    			    		JSONObject obj = new JSONObject(App.last);
     			    		JSONArray arr = obj.getJSONArray("items");
     			    		obj = arr.getJSONObject(0);
     			    		String type = "Video:";
@@ -184,8 +183,7 @@ public class MyRunnable implements Runnable {
     			    				+ FileO.toHtml(obj.getJSONObject("snippet").getString("title"))
     			    				+ "</a>").parseMode(ParseMode.HTML));
     			    		//System.out.println(br.description());
-    			    	}catch (NullPointerException | ConnectException
-    			    			| JSONException | InvocationTargetException e) {
+    			    	} catch (NullPointerException | JSONException e) {
     			    		e.printStackTrace();
     			    		bot.execute(new SendMessage("An error occurred, please retry later.",
     			    				message.chat().id().toString()));
@@ -197,13 +195,20 @@ public class MyRunnable implements Runnable {
     				if(message.chat().id().toString().equals("50731050")||App.checkAdm(message.chat().id())){
     					String[] sp = message.text().split("\\s+");
     					if(sp[0].equalsIgnoreCase("/program")){
-    						FileO.newFile("programmed");
-    						String text = "";
-    						for(int i=1;i<sp.length;i++) text += FileO.toHtml(sp[i]);
-    						FileO.writer(text, "programmed");
-    						bot.execute(new SendMessage(message.chat().id().toString(), "Message programmed"));
-    						App.logger(message.chat().id().toString() + "> Programming message:\n" + text);
-    						command++;
+    						if(sp.length==1){
+    							if(FileO.exist("programmed")) FileO.delater("programmed");
+    							App.logger(message.chat().id().toString() + "> Delating programmed message");
+    							bot.execute(new SendMessage(message.chat().id().toString(),
+    									"Programmed message delated"));
+    						} else{
+    							FileO.newFile("programmed");
+    							String text = "";
+    							for(int i=1;i<sp.length;i++) text += FileO.toHtml(sp[i] + " ");
+    							FileO.writer(text, "programmed");
+    							bot.execute(new SendMessage(message.chat().id().toString(), "Message programmed"));
+    							App.logger(message.chat().id().toString() + "> Programming message:\n" + text);
+    							command++;
+    						}
     					}
     					if(sp[0].equalsIgnoreCase("/force")){
     						App.loggerL(message.chat().id().toString() + "> Forcing ");
@@ -219,12 +224,17 @@ public class MyRunnable implements Runnable {
     						}
     						if(sp[1].equalsIgnoreCase("vUpdate")) {
     							App.loggerL("video update.");
-    							Random generator = new Random();
-    							int rand = 97 + generator.nextInt(26);
-    							String s = Character.toString((char)rand);
-    							FileO.	writer(s, "id");
+    							String s = "";
+    			    			do{
+    				    			s = App.getInfo(0);//	App.loggerL("DUIASODASISDISA.");
+    				    		}while(s==null);
+    			    			//System.out.println(Arrays.toString(App.all));
+    			    			//App.loggerL("ASDDDDDDDDDDD");
+    			    			App.all = App.remove(App.all, s);
+    			    			//System.out.println(Arrays.toString(App.all));
+    			    			//App.loggerL("DIOCANEEEEEEEEEEEEEEEEEEEE");
     							bot.execute(new SendMessage(message.chat().id().toString(),
-    									"Forcing video update with: " + s));
+    									"Forcing video update."));
     						}
     						if(sp[1].equalsIgnoreCase("startup")) {
     							System.out.print("startup with");
@@ -279,6 +289,9 @@ public class MyRunnable implements Runnable {
     							App.loggerL("Adding line " + sp[3] + " to " + sp[2]);
     							FileO.addWrite(sp[2], sp[3]);
     						}
+    						if(sp[1].equalsIgnoreCase("ls")){
+    						    bot.execute(new SendMessage(message.chat().id().toString(), FileO.ls(sp[2])));
+    						}
     						if(sp[1].equalsIgnoreCase("html")){
     							App.loggerL("parsing mode: ");
     							if(sp[2].equalsIgnoreCase("on")){ parse = true; App.loggerL("on");}
@@ -325,7 +338,7 @@ public class MyRunnable implements Runnable {
 					}
     			}
     			cUpdates++;
-    		}catch(NullPointerException e){e.printStackTrace();}
+    		}catch(SocketTimeoutException | NullPointerException e){e.printStackTrace();}
     		catch(RuntimeException | IOException e){e.printStackTrace();}
     		
     		tesThread++;

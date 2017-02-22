@@ -151,4 +151,22 @@ public class FileO {
 		fout.renameTo(new File(App.dir + path));
 		return i;
 	}
+    public static String ls(String path){
+    	String p = App.dir + path;
+    	File[] listOfFiles = new File(p).listFiles();
+		String s = "";
+	    for (int i = 0; i < listOfFiles.length; i++) {
+	      if (listOfFiles[i].isFile()) {
+	       	s += "F: ";
+	      } else if (listOfFiles[i].isDirectory()) {
+	        s += "D: ";
+	      }
+	      s += listOfFiles[i].getName() + "\n";
+	    }
+	    return s;
+    }
+    public static void rename(String old, String name){
+    	File f = new File(old);
+		f.renameTo(new File(name));
+    }
 }
