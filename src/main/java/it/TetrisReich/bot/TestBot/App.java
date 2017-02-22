@@ -84,7 +84,7 @@ public class App {
     	crash = true;
     	return false;
     }
-	public static void main(String[] args) throws IOException, InvocationTargetException {
+	public static void mainOld(String[] args) throws IOException, InvocationTargetException {
     	if(args.length>=1) log = true;	
 		for (String s: args) {
         	switch(s){
@@ -235,7 +235,7 @@ public class App {
     				obj.getJSONObject("snippet").getString("liveBroadcastContent").equals("upcoming")
     			) inLive = true;
     		videoid = result;
-    	}catch (NullPointerException | ConnectException | JSONException | InvocationTargetException e) {
+    	}catch (Exception e) {
 			e.printStackTrace();
 			inLive = false;
 			try{
