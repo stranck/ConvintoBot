@@ -1,6 +1,7 @@
 package reloaded.convintobot;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import com.pengrad.telegrambot.TelegramBot;
@@ -23,8 +24,12 @@ public class Main {
 		
 		Youtube yt = new Youtube();
 		Phrase f = new Phrase();
+		Info i = new Info();
+		ArrayList<Live> l = new ArrayList<Live>();
 		
-		byte checkUpdate = 0x11, switchLiveVideo = 0x00;
+		byte checkUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
+		boolean switchLiveVideo = true;
+		int liveIndex = 0;
 		
 		if(!st.loadSettings()) {
 			logger("Error while loading settings file");
@@ -53,12 +58,36 @@ public class Main {
 		while(true){
 			if(--checkUpdate == 0x00){
 				//youtube
-				if()
+				if(switchLiveVideo || l.size() == 0){
+					//check video update
+					i.update(0, st);
+					
+				} else {
+					int status = convertType(i.getVideoType(l.get(liveIndex).getId(), st));
+					if(status==1&&l.get(liveIndex).getType()==2){
+						//live changed his status from upcoming to live
+						l.get(liveIndex).setType(status);
+					} else if(status==0){
+						//live stopped
+						l.remove(liveIndex);
+					}
+					
+					if(++liveIndex >= l.size()) liveIndex = 0;
+					if(l.size() == 0) switchLiveVideo = true; else switchLiveVideo = !switchLiveVideo;
+				}
 				checkUpdate = 0x11;
 			}
 			//telegram
 			wait(500);
 		}
+	}
+	
+	public static byte convertType(String type){
+		switch(type){
+			case"live":     return 1;
+			case"upcoming": return 2;
+		}
+		return 0;
 	}
 	
 	public static void moveLog(){

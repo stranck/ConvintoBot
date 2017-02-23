@@ -1,12 +1,13 @@
 package reloaded.convintobot;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Phrase {
-	private String[] videoPhrase, livePhrase, upcomingPhrase;
+	private ArrayList<String> videoPhrase = new ArrayList<String>(), livePhrase = new ArrayList<String>(), upcomingPhrase = new ArrayList<String>();
 	
 	public boolean initialize(){
 		if(!FileO.exist("phrases.json")){
@@ -36,21 +37,15 @@ public class Phrase {
 		try {
 			{
 				JSONArray videoPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("video");
-				String[] localVideoPhrases = new String[videoPhrases.length()];
-				for(int i = 0; i < localVideoPhrases.length; i++) localVideoPhrases[i] = videoPhrases.getJSONObject(i).toString();
-				videoPhrase = localVideoPhrases;
+				for(int i = 0; i < videoPhrases.length(); i++) videoPhrase.add(videoPhrases.getString(i));
 			}
 			{
 				JSONArray livePhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("live");
-				String[] localLivePhrases = new String[livePhrases.length()];
-				for(int i = 0; i < localLivePhrases.length; i++) localLivePhrases[i] = livePhrases.getJSONObject(i).toString();
-				livePhrase = localLivePhrases;
+				for(int i = 0; i < livePhrases.length(); i++) livePhrase.add(livePhrases.getString(i));
 			}
 			{
 				JSONArray upcomingPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("upcoming");
-				String[] localUpcomingPhrases = new String[upcomingPhrases.length()];
-				for(int i = 0; i < localUpcomingPhrases.length; i++) localUpcomingPhrases[i] = upcomingPhrases.getJSONObject(i).toString();
-				videoPhrase = localUpcomingPhrases;
+				for(int i = 0; i < upcomingPhrases.length(); i++) upcomingPhrase.add(upcomingPhrases.getString(i));
 			}
 			Main.logger("Done!");
 			return true;
@@ -62,7 +57,7 @@ public class Phrase {
 		return false;
 	}
 	
-	public String[] getAllPhrases(String type){
+	public ArrayList<String> getAllPhrases(String type){
 		try{
 			switch(type){
 				case"video":    return videoPhrase;
@@ -85,9 +80,9 @@ public class Phrase {
 		} else {
 			Random r = new Random();
 			switch(type){
-				case"video":    return videoPhrase[r.nextInt(videoPhrase.length)];
-				case"live":		return livePhrase[r.nextInt(livePhrase.length)];
-				case"upcoming": return upcomingPhrase[r.nextInt(upcomingPhrase.length)];
+				case"video":    return videoPhrase.get(r.nextInt(videoPhrase.size()));
+				case"live":		return livePhrase.get(r.nextInt(livePhrase.size()));
+				case"upcoming": return upcomingPhrase.get(r.nextInt(upcomingPhrase.size()));
 			}
 		}
 		return null;

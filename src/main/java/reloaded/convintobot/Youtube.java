@@ -1,37 +1,40 @@
 package reloaded.convintobot;
 
+import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Youtube {
-	private String[] oldVideoIds;
+	private ArrayList<String> oldVideoIds = new ArrayList<String>();
 	
 	public void initialize(Settings s){
 		Main.loggerL("Inizialazing youtube object... ");
-		JSONArray arr;
-		while(true){
-    		try{
-    			JSONObject obj = new JSONObject(Download.dwn(s.getGoogleApiFullUrl(16)));
-	    		arr = obj.getJSONArray("items");
-	    		break;
-    		}catch(Exception e){
-    			Main.wait(5000);
-    		}
+		Info info = new Info();
+		for(int i = 0; i < 16; i++){
+			info.update(i, s);
+			oldVideoIds.add(info.getVideoId());
 		}
-		String[] localIds = new String[arr.length()];
-		for(int i = 0; i < localIds.length; i++) localIds[i] = arr.getString(i);
-		oldVideoIds = localIds;
 		
-		if(!FileO.exist("last.temp")) {
-			FileO.newFile("last.temp");
-			FileO.writer("---;123", "last.temp");
+		if(!FileO.exist("last.ini")) {
+			FileO.newFile("last.ini");
+			FileO.writer("---;123", "last.ini");
 		}
 		Main.logger("Done!");
 	}
 	
 	//vado a magnà
 	
-	public String[] getOldVideoIds(){
+	public boolean newVideo(String id){
+		if(!oldVideoIds.contains(id)){
+			oldVideoIds.remove(0);
+			oldVideoIds.add(id);
+			return true;
+		}
+		return false;
+	}
+
+	public ArrayList<String> getOldVideoIds(){
 		return oldVideoIds;
 	}
 }

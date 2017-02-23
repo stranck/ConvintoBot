@@ -1,12 +1,14 @@
 package reloaded.convintobot;
 
+import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Settings {
 	private boolean phraseStatus;
 	private String dir, gToken, tToken, id, chat, botName;
-	private String[] admins;
+	private ArrayList<String> admins = new ArrayList<String>();
 	public boolean loadSettings(){
 		try {
 			if(!FileO.exist("config.json")){
@@ -41,9 +43,7 @@ public class Settings {
 			dir = System.getProperty("user.dir");
 			
 			JSONArray admin = config.getJSONArray("admins");
-			String[] localAdmins = new String[admin.length()];
-			for(int i = 0; i < localAdmins.length; i++) localAdmins[i] = admin.getJSONObject(i).toString();
-			admins = localAdmins;
+			for(int i = 0; i < admin.length(); i++) admins.add(admin.getString(i));
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -51,7 +51,7 @@ public class Settings {
 		}
 		return true;
 	}
-	public String[] getAdmins(){
+	public ArrayList<String> getAdmins(){
 		return admins;
 	}
 	public String getBotName(){
@@ -84,4 +84,7 @@ public class Settings {
 	public String getGoogleApiFullUrl(int n){
 		return "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=" + id + "&order=date&type=video&key=" + gToken + "&maxResults=" + n;
 	}
+	public String getUrlVideoType(String id){
+    	return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + id + "&maxResults=1&key=" + gToken; 
+    }
 }
