@@ -7,6 +7,7 @@ import java.util.Date;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.TelegramBotAdapter;
 import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.SendMessage;
 
 public class Main {
@@ -56,30 +57,80 @@ public class Main {
 		
 		
 		while(true){
-			if(--checkUpdate == 0x00){
-				//youtube
-				if(switchLiveVideo || l.size() == 0){
-					//check video update
-					i.update(0, st);
-					
-				} else {
-					int status = convertType(i.getVideoType(l.get(liveIndex).getId(), st));
-					if(status==1&&l.get(liveIndex).getType()==2){
-						//live changed his status from upcoming to live
-						l.get(liveIndex).setType(status);
-					} else if(status==0){
-						//live stopped
-						l.remove(liveIndex);
+			try{
+				if(--checkUpdate == 0x00){
+					//youtube
+					loggerL("Checking youtube ");
+					if(switchLiveVideo || l.size() == 0){
+						
+						//check video update
+						loggerL("video... ");
+						i.update(0, st);
+						if(yt.newVideo(i.getVideoId())){
+							
+							//new video founded
+							loggerL("NEW ");
+							String oldMessageData[] = FileO.reader("last.ini").split("@"); //edit previous message for less spam in chat
+							bot.execute(new EditMessageText(st.getChatId(), Integer.parseInt(oldMessageData[2]),
+									convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+							
+							int type = convertType(i.getVideoType()); //stuff & get if any phrase is programmed
+							String mText = f.getSinglePhrases(type, st);
+							if(FileO.exist("programmed.ini")) {
+								mText = FileO.toHtml(FileO.reader("programmed.ini"));
+								FileO.delater("programmed.ini");
+							}
+							
+							int msId = bot.execute(new SendMessage(st.getChatId(), mText + "\n" + //send message
+									convertToLink(i.getVideoId(), i.getVideoName())).parseMode(ParseMode.HTML)).message().messageId();
+							
+							if(type != 0) {
+								l.add(new Live(i.getVideoName(), i.getVideoId(), type, msId)); //if it is a live add a live to the list
+								loggerL("LIVE ");
+							} else FileO.writer(FileO.toHtml(i.getVideoName() + "@" + i.getVideoId() + "@" + msId), "last.ini");
+							
+							loggerL(i.getVideoId() + "\nPhrase used: " + mText);
+						}
+						logger("");
+						
+					} else {
+						
+						//check live status
+						loggerL("live (" + l.get(liveIndex).getId() + "... ");
+						boolean b = false;
+						int status = convertType(i.getVideoType(l.get(liveIndex).getId(), st)), msId = l.get(liveIndex).getMessageId();
+						String mText = "", id = l.get(liveIndex).getId(), title = l.get(liveIndex).getTitle();
+						
+						if(status==1&&l.get(liveIndex).getType()==2){
+							//live changed his status from upcoming to live
+							mText = f.getSinglePhrases(1, st);
+							loggerL("Changed from upcoming to live.\nPhrase used: " + mText);
+							l.get(liveIndex).setType(status);
+							b = true;
+						} else if(status==0){
+							//live stopped
+							mText = f.getSinglePhrases(3, st);
+							loggerL("stopped.\nPhrase used: " + mText);
+							l.remove(liveIndex);
+							b = true;
+						}
+						
+						if(b) bot.execute(new EditMessageText(st.getChatId(), msId, mText + "\n" + convertToLink(id, title)));
+						
+						if(++liveIndex >= l.size()) liveIndex = 0;
+						if(l.size() == 0) switchLiveVideo = true; else switchLiveVideo = !switchLiveVideo;
+						logger("");
 					}
-					
-					if(++liveIndex >= l.size()) liveIndex = 0;
-					if(l.size() == 0) switchLiveVideo = true; else switchLiveVideo = !switchLiveVideo;
+					checkUpdate = 0x11;
 				}
-				checkUpdate = 0x11;
-			}
-			//telegram
+				//telegram
+			}catch(Exception e){e.printStackTrace();}	
 			wait(500);
 		}
+	}
+	
+	public static String convertToLink(String id, String title){
+		return "<a href=\"https://youtu.be/" + id + "\">" + FileO.toHtml(title) + "</a>";
 	}
 	
 	public static byte convertType(String type){

@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 public class Youtube {
 	private ArrayList<String> oldVideoIds = new ArrayList<String>();
+	private boolean forceNewVideo = false;
 	
 	public void initialize(Settings s){
 		Main.loggerL("Inizialazing youtube object... ");
@@ -18,14 +19,19 @@ public class Youtube {
 		
 		if(!FileO.exist("last.ini")) {
 			FileO.newFile("last.ini");
-			FileO.writer("---;123", "last.ini");
+			FileO.writer("thisisatest@uItXIawwf8k@0", "last.ini");
 		}
 		Main.logger("Done!");
 	}
 	
 	//vado a magnà
 	
+	public void forceVideoUpdate(boolean b){
+		forceNewVideo = b;
+	}
+	
 	public boolean newVideo(String id){
+		if(forceNewVideo) return true;
 		if(!oldVideoIds.contains(id)){
 			oldVideoIds.remove(0);
 			oldVideoIds.add(id);

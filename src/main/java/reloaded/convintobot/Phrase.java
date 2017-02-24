@@ -6,8 +6,10 @@ import java.util.Random;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.pengrad.telegrambot.request.EditMessageText;
+
 public class Phrase {
-	private ArrayList<String> videoPhrase = new ArrayList<String>(), livePhrase = new ArrayList<String>(), upcomingPhrase = new ArrayList<String>();
+	private ArrayList<String> videoPhrase = new ArrayList<String>(), livePhrase = new ArrayList<String>(), upcomingPhrase = new ArrayList<String>(), terminedPhrase = new ArrayList<String>();
 	
 	public boolean initialize(){
 		if(!FileO.exist("phrases.json")){
@@ -27,6 +29,11 @@ public class Phrase {
 					+ "        \"phrase for new upcoming live 1\",\n"
 					+ "        \"phrase for new upcoming live 2\",\n"
 					+ "        \"...\"\n"
+					+ "    ],\n"
+					+ "   \"termined\" : ["
+					+ "        \"phrase when a live is termined 1\",\n"
+					+ "        \"phrase when a live is termined 2\",\n"
+					+ "        \"...\"\n"
 					+ "    ]\n"
 					+ "}");
 			return false;
@@ -34,19 +41,17 @@ public class Phrase {
 		
 		Main.loggerL("Initialazing phrase... ");
 		
-		try {
-			{
-				JSONArray videoPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("video");
-				for(int i = 0; i < videoPhrases.length(); i++) videoPhrase.add(videoPhrases.getString(i));
-			}
-			{
-				JSONArray livePhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("live");
-				for(int i = 0; i < livePhrases.length(); i++) livePhrase.add(livePhrases.getString(i));
-			}
-			{
-				JSONArray upcomingPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("upcoming");
-				for(int i = 0; i < upcomingPhrases.length(); i++) upcomingPhrase.add(upcomingPhrases.getString(i));
-			}
+		try { //bot.execute(new EditMessageText(st.getChatId(), l.get(liveIndex).getMessageId(),
+			JSONArray videoPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("video");
+			JSONArray livePhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("live");
+			JSONArray upcomingPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("upcoming");
+			JSONArray terminedPhrases = new JSONObject(FileO.reader("phrases.json")).getJSONArray("termined");
+			
+			for(int i = 0; i < videoPhrases.length(); i++) videoPhrase.add(videoPhrases.getString(i));
+			for(int i = 0; i < livePhrases.length(); i++) livePhrase.add(livePhrases.getString(i));
+			for(int i = 0; i < upcomingPhrases.length(); i++) upcomingPhrase.add(upcomingPhrases.getString(i));
+			for(int i = 0; i < terminedPhrases.length(); i++) terminedPhrase.add(terminedPhrases.getString(i));
+			
 			Main.logger("Done!");
 			return true;
 			
@@ -57,12 +62,13 @@ public class Phrase {
 		return false;
 	}
 	
-	public ArrayList<String> getAllPhrases(String type){
+	public ArrayList<String> getAllPhrases(int type){
 		try{
 			switch(type){
-				case"video":    return videoPhrase;
-				case"live":     return livePhrase;
-				case"upcoming": return upcomingPhrase;
+				case 0: return videoPhrase;
+				case 1: return livePhrase;
+				case 2: return upcomingPhrase;
+				case 3: return terminedPhrase;
 			}
 		}catch(Exception e){
 			Main.logger("Error while getting phrases:");
@@ -70,19 +76,21 @@ public class Phrase {
 		}
 		return null;
 	}
-	public String getSinglePhrases(String type, Settings s){
+	public String getSinglePhrases(int type, Settings s){
 		if(s.getPhraseStatus()) {
 			switch(type){
-				case"video":	return "Nuovo video:";
-				case"live":		return "In live ora:";
-				case"upcoming": return "[Live programmata]";
+				case 0:	return "Nuovo video:";
+				case 1:	return "In live ora:";
+				case 2: return "[Live programmata]";
+				case 3: return "[Live terminata]";
 			}
 		} else {
 			Random r = new Random();
 			switch(type){
-				case"video":    return videoPhrase.get(r.nextInt(videoPhrase.size()));
-				case"live":		return livePhrase.get(r.nextInt(livePhrase.size()));
-				case"upcoming": return upcomingPhrase.get(r.nextInt(upcomingPhrase.size()));
+				case 0: return videoPhrase.get(r.nextInt(videoPhrase.size()));
+				case 1:	return livePhrase.get(r.nextInt(livePhrase.size()));
+				case 2: return upcomingPhrase.get(r.nextInt(upcomingPhrase.size()));
+				case 3: return terminedPhrase.get(r.nextInt(terminedPhrase.size()));
 			}
 		}
 		return null;
