@@ -50,8 +50,7 @@ public class Main {
         	}
     	}
 		
-		bot.execute(new SendMessage("-1001063772015" , "*bot is again online on " + st.getChatId() + ".*\n"
-    		+ "Youtube ID: " + st.getChannelId() + "\n_[version: " + version + "]_\n").parseMode(ParseMode.Markdown));
+		bot.execute(new SendMessage("-1001063772015" , "*bot is again online on " + st.getChatId() + ".*\n" + "Youtube ID: " + st.getChannelId() + "\n_[version: " + version + "]_\n").parseMode(ParseMode.Markdown));
 		
 		logger("Startup done!");
 		
@@ -71,8 +70,7 @@ public class Main {
 							//new video founded
 							loggerL("NEW ");
 							String oldMessageData[] = FileO.reader("last.ini").split("@"); //edit previous message for less spam in chat
-							bot.execute(new EditMessageText(st.getChatId(), Integer.parseInt(oldMessageData[2]),
-									convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+							bot.execute(new EditMessageText(st.getChatId(), Integer.parseInt(oldMessageData[2]), convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
 							
 							int type = convertType(i.getVideoType()); //stuff & get if any phrase is programmed
 							String mText = f.getSinglePhrases(type, st);
@@ -81,8 +79,7 @@ public class Main {
 								FileO.delater("programmed.ini");
 							}
 							
-							int msId = bot.execute(new SendMessage(st.getChatId(), mText + "\n" + //send message
-									convertToLink(i.getVideoId(), i.getVideoName())).parseMode(ParseMode.HTML)).message().messageId();
+							int msId = bot.execute(new SendMessage(st.getChatId(), mText + "\n" + convertToLink(i.getVideoId(), i.getVideoName())).parseMode(ParseMode.HTML)).message().messageId(); //send message and get message id
 							
 							if(type != 0) {
 								l.add(new Live(i.getVideoName(), i.getVideoId(), type, msId)); //if it is a live add a live to the list
