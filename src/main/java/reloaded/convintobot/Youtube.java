@@ -11,10 +11,20 @@ public class Youtube {
 	
 	public void initialize(Settings s){
 		Main.loggerL("Inizialazing youtube object... ");
-		Info info = new Info();
-		for(int i = 0; i < 16; i++){
-			info.update(i, s);
-			oldVideoIds.add(info.getVideoId());
+		
+		while(true){
+    		try{
+	    		//System.out.println("START");
+    			JSONObject obj = new JSONObject(Download.dwn(s.getGoogleApiFullUrl(16)));
+	    		//System.out.println("END");
+	    		JSONArray arr = obj.getJSONArray("items");
+	    		for(int i = 0; i < arr.length(); i++) oldVideoIds.add(arr.getJSONObject(i).getJSONObject("id").getString("videoId"));
+	    		//System.out.println("DONE");
+	    		break;
+    		}catch(Exception e){
+    			e.printStackTrace();
+    			Main.wait(5000);
+    		}
 		}
 		
 		if(!FileO.exist("last.ini")) {

@@ -1,5 +1,6 @@
 package reloaded.convintobot;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
@@ -7,7 +8,7 @@ import org.json.JSONObject;
 
 public class Settings {
 	private boolean phraseStatus;
-	private String dir, gToken, tToken, id, chat, botName;
+	private String gToken, tToken, id, chat, botName, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
 	public boolean loadSettings(){
 		try {
@@ -23,7 +24,7 @@ public class Settings {
 				FileO.addWrite("config.json", "    \"admins\" : [");
 				FileO.addWrite("config.json", "        \"INSERIT THE TELEGRAM ACCOUNT ID OF YOUR FIRST ADMIN HERE\",");
 				FileO.addWrite("config.json", "        \"INSERIT THE TELEGRAM ACCOUNT ID OF YOUR SECOND ADMIN HERE\",");
-				FileO.addWrite("config.json", "        \"...\",");
+				FileO.addWrite("config.json", "        \"...\"");
 				FileO.addWrite("config.json", "    ]");
 				FileO.addWrite("config.json", "}");
 				Main.logger("File \"config.json\" created. Edit your settings and then turn on again the bot.");
@@ -31,7 +32,7 @@ public class Settings {
 			}
 			
 			Main.loggerL("Loading configs... ");
-			JSONObject config = new JSONObject(FileO.reader("config.json"));
+			JSONObject config = new JSONObject(FileO.allLine("config.json"));
 			gToken = config.getString("gToken");
 			tToken = config.getString("tToken");
 			id = config.getString("id");
@@ -39,8 +40,7 @@ public class Settings {
 			botName = config.getString("botName");
 			Main.logger("done");
 			
-			
-			dir = System.getProperty("user.dir");
+			dir = System.getProperty("user.dir") + File.separator;
 			
 			JSONArray admin = config.getJSONArray("admins");
 			for(int i = 0; i < admin.length(); i++) admins.add(admin.getString(i));

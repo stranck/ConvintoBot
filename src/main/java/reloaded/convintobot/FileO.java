@@ -41,18 +41,15 @@ public class FileO {
         bufferedReader.close();
         return line;
     }
-    public static String allLine(String name) throws FileNotFoundException, IOException{
+    public static String allLine(String path) throws FileNotFoundException, IOException{
     	String line;
 		String ret = "";
     	try (
-    	    InputStream fis = new FileInputStream(name);
+    	    InputStream fis = new FileInputStream(Main.st.getDefaultDirectory() + path);
     	    InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
     	    BufferedReader br = new BufferedReader(isr);
     	) {
-    		int first = 0;
-    	    while ((line = br.readLine()) != null) {
-    	    if(first<1){first++;}else{ret = ret + line;}
-    	    }
+    	    while ((line = br.readLine()) != null) ret += line;
     	}
     	return ret;
     }
@@ -91,18 +88,6 @@ public class FileO {
         	if(sp[0].equalsIgnoreCase("delate")&&exist(sp[1])) {delater(sp[1]);b = true;}
     	}
     	return b;
-    }
-    public static String aL(String path, boolean slashN) throws FileNotFoundException, IOException{
-	    String ret = "";
-	    String accapo = "";
-	    if(slashN) accapo = "\n";
-    	try (BufferedReader br = new BufferedReader(new FileReader(Main.st.getDefaultDirectory() + path))) {
-    	    String line;
-    	    while ((line = br.readLine()) != null) {
-    	       ret += line + accapo;
-    	    }
-    	}
-    	return ret;
     }
     public static String toHtml(String s) {
     	String ret = "";
