@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import it.TetrisReich.bot.TestBot.App;
+
 public class Settings {
+	private long startTime;
 	private boolean phraseStatus;
 	private String gToken, tToken, id, chat, botName, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
-	public boolean loadSettings(){
+	public boolean loadSettings(long sTime){
 		try {
 			if(!FileO.exist("config.json")){
 				Main.logger("File \"config.json\" not found.");
@@ -38,6 +41,7 @@ public class Settings {
 			id = config.getString("id");
 			chat = config.getString("chat");
 			botName = config.getString("botName");
+			startTime = sTime;
 			Main.logger("done");
 			
 			dir = System.getProperty("user.dir") + File.separator;
@@ -87,4 +91,12 @@ public class Settings {
 	public String getUrlVideoType(String id){
     	return "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=" + id + "&maxResults=1&key=" + gToken; 
     }
+	public String getUpTime(){
+		long estimatedTime = (System.currentTimeMillis() - startTime) / 1000;
+		int hours = (int) estimatedTime / 3600;
+	    int secs = (int) estimatedTime - hours * 3600;
+	    int mins = secs / 60;
+	    secs = secs - mins * 60;
+	    return hours + ":" + mins + ":" + secs;
+	}
 }

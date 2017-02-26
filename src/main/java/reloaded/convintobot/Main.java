@@ -1,14 +1,21 @@
 package reloaded.convintobot;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.TelegramBotAdapter;
+import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.EditMessageText;
+import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.response.GetUpdatesResponse;
+
+import reloaded.convintobot.tResponse.Commands;
 
 public class Main {
 	
@@ -23,6 +30,10 @@ public class Main {
 	
 	public static void main(String[] args){
 		
+		long startTime = System.currentTimeMillis();
+		
+		if(!FileO.pathExist("command")) FileO.newPath("commands");
+		
 		Youtube yt = new Youtube();
 		Phrase f = new Phrase();
 		Info i = new Info();
@@ -31,11 +42,13 @@ public class Main {
 		byte checkUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
 		boolean switchLiveVideo = true;
 		int liveIndex = 0;
+		int offset = 0;
 		
-		if(!st.loadSettings()) {
+		if(!st.loadSettings(startTime)) {
 			logger("Error while loading settings file");
 			return;
 		}
+		ArrayList<Commands> c = initializeCmds();
 		yt.initialize(st);
 		f.initialize();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
@@ -127,6 +140,93 @@ public class Main {
 					checkUpdate = 0x11;
 				}
 				//telegram
+				
+				GetUpdatesResponse updatesResponse = bot.execute(new GetUpdates().offset(offset));
+    			List<Update> updates = updatesResponse.updates();
+    			for(Update update : updates) {
+    				
+    				offset = update.updateId() + 1;
+    				try{
+    					logger(update.message().chat().id() + ">" + update.message().text());
+    				}catch(Exception e) {}
+    				
+    				for(Commands cmd : c){
+    					if(cmd.isThisCommand(update.message().text())){
+    						boolean admin = st.getAdmins().contains(update.message().from().id().toString());
+    						int response = cmd.commandExecute(update.message().text(), bot, update, st, i, admin);
+    						
+    						if(admin){
+    							String[] sp = update.message().text().split("\\s+");
+    							
+    							switch(response){
+    								case 0: break;
+    								
+    								case 1: { //force
+    									switch(sp[2]){
+    									
+    										case"reboot": {
+    											logger("Forced reboot from ad admin");
+    											return;
+    										}
+    										case"vUpdate":{yt.forceVideoUpdate(true); break;}
+    										
+    									}
+    									break;
+    								}
+    								case 2: { //reload
+    									
+    									switch(sp[2]){
+    									
+    										case"Settings": {st.loadSettings(startTime); break;}
+    										case"Phrases": 	{f.initialize(); break;}
+    										case"Commands": {c = initializeCmds(); break;}
+    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    										
+    									}
+    									break;
+    								}
+    								case 3: { //file
+    									
+    									String all = "";
+										for(int n = 4; n < sp.length; n++) all += sp[n] + " ";
+    									switch(sp[2]){
+    										
+    										case"newFile": {FileO.newFile(sp[3]); break;}
+    										case"newPath": {FileO.newPath(sp[3]); break;}
+    										case"edit": {FileO.writer(sp[3], all); break;}
+    										case"addLine": {FileO.addWrite(all, sp[3]); break;}
+    										case"read": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.allLine(sp[3]))); break;}
+    										case"delete": {FileO.delater(sp[3]); break;}
+    										case"cod": {FileO.toHtml(sp[3]); break;}
+    										case"decod": {FileO.fromHtml(sp[3]); break;}
+    										case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3]))); break;}
+    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    									
+    									}
+    									break;
+    								}
+    								case 4: {//program
+    									
+    									if(sp.length > 2){
+    										String program = "";
+    										for(int n = 2; n < sp.length; n++) program += sp[n] + " ";
+    										if(!FileO.exist("programmed.ini"))
+    											FileO.newFile("programmed.ini"); else
+    											bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
+    										FileO.writer(program, "programmed.ini");
+    									} else if(FileO.exist("programmed.ini")){
+    										bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
+    										FileO.delater("programmed.ini");
+    									}
+    									
+    								}
+    							}
+    							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+    						}
+    					}
+    				}
+    			}
+				
 			}catch(Exception e){e.printStackTrace();}	
 			wait(500);
 		}
@@ -155,6 +255,13 @@ public class Main {
     		} i++;
     	}
     }
+	
+	public static ArrayList<Commands> initializeCmds(){
+		ArrayList<Commands> c = new ArrayList<Commands>();
+		File[] listOfFiles = new File("commands" + File.separator).listFiles();
+		for(File f : listOfFiles) c.add(new Commands(f.getName().split("\\.")[0]));
+		return c;
+	}
 	
 	public static void wait(int ms){
 		try{

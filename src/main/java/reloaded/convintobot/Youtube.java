@@ -41,7 +41,10 @@ public class Youtube {
 	}
 	
 	public boolean newVideo(String id){
-		if(forceNewVideo) return true;
+		if(forceNewVideo) {
+			forceNewVideo = false;
+			return true;
+		}
 		if(!oldVideoIds.contains(id)){
 			oldVideoIds.remove(0);
 			oldVideoIds.add(id);

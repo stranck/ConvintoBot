@@ -145,4 +145,11 @@ public class FileO {
     	File f = new File(old);
 		f.renameTo(new File(name));
     }
+    public static boolean pathExist(String path){
+    	File f = new File(path);
+    	return f.exists() && f.isDirectory();
+    }
+    public static void newPath(String path){
+    	new File(path).mkdir();
+    }
 }
