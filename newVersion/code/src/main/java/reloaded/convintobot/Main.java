@@ -19,13 +19,8 @@ import reloaded.convintobot.tResponse.Commands;
 
 public class Main {
 	
-	public static final String version = "official2.0.02222017"; //MMddYYYY
-	public static boolean
-			link = true,
-			stat = false,
-			skipDefaultDirectory = false,
-			skipOnlineCheck = false,
-			tempLine = true;
+	public static final String version = "official2.0.02282017"; //MMddYYYY
+	public static boolean link = true, tempLine = true;
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
 	
@@ -57,10 +52,8 @@ public class Main {
 		for (int n = 0; n < args.length; n++) {
         	switch(args[n]){
         		case"-l": {link = true; break;}
-        		case"-s": {stat = true; break;}
         		case"-d": {st.removeDirectory(); break;}
         		case"-ml":{moveLog(); break;}
-        		case"-o": {skipOnlineCheck = true; break;}
         		case"-dg":{maxCheckUpdate = Byte.valueOf(args[++n]); break;}
         		case"-dt":{millsDelay = Integer.parseInt(args[++n]); break;}
         	}
