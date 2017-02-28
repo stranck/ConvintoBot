@@ -58,7 +58,8 @@ public class Commands {
 	
 	public boolean isThisCommand(String cmd){
 		try{
-			return cmd.split("\\s+")[0].equalsIgnoreCase(command) || ("/start" + cmd.split("\\s+")[1]).equalsIgnoreCase(command);
+			if(command.equalsIgnoreCase("/start") && cmd.split("\\s+").length > 1) return false;
+			return cmd.split("\\s+")[0].equalsIgnoreCase(command) || ("/start " + cmd.split("\\s+")[1]).equalsIgnoreCase("/start " + command.substring(1, command.length()));
 		}catch(Exception e){}
 		return false;
 	}

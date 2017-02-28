@@ -4,7 +4,7 @@
 
   <groupId>reloaded</groupId>
   <artifactId>convintobot</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>2.0.0</version>
   <packaging>jar</packaging>
 
   <name>convintobot</name>
@@ -20,22 +20,10 @@
   <artifactId>java-telegram-bot-api</artifactId>
   <version>2.1.4</version>
 </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
 <dependency>
     <groupId>org.json</groupId>
     <artifactId>json</artifactId>
     <version>20160212</version>
-</dependency>
-<dependency>
-    <groupId>org.apache.commons</groupId>
-    <artifactId>commons-lang3</artifactId>
-    <version>3.5</version>
 </dependency>
 
   </dependencies>
