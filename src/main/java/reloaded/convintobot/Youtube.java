@@ -22,7 +22,7 @@ public class Youtube {
 	    		//System.out.println("DONE");
 	    		break;
     		}catch(Exception e){
-    			e.printStackTrace();
+    			Main.ea.alert(e);
     			Main.wait(5000);
     		}
 		}

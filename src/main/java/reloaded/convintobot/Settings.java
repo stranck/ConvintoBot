@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import it.TetrisReich.bot.TestBot.App;
-
 public class Settings {
 	private long startTime;
 	private boolean phraseStatus;
@@ -50,7 +48,7 @@ public class Settings {
 			for(int i = 0; i < admin.length(); i++) admins.add(admin.getString(i));
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			Main.ea.alert(e);
 			return false;
 		}
 		return true;

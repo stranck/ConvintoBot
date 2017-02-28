@@ -15,7 +15,7 @@ public class Info {
 				name = snippet.getString("title");
 				return;
 			} catch (Exception e) {
-				e.printStackTrace();
+				Main.ea.alert(e);
 				Main.wait(5000);
 			}
 		}
@@ -26,7 +26,7 @@ public class Info {
 			try{
 				return new JSONObject(Download.dwn(s.getUrlVideoType(id))).getJSONArray("items").getJSONObject(0).getJSONObject("snippet").getString("liveBroadcastContent");
 			}catch(Exception e){
-				e.printStackTrace();
+				Main.ea.alert(e);
 				Main.wait(5000);
 			}
 		}

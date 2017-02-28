@@ -29,7 +29,7 @@ public class FileO {
 			fileWriter.flush();
 			fileWriter.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Main.ea.alert(e);
 		}
     	return true;
     }

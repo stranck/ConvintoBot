@@ -58,7 +58,7 @@ public class Phrase {
 			
 		} catch (Exception e) {
 			Main.logger("Error while loading \"phrases.json\": ");
-			e.printStackTrace();
+			Main.ea.alert(e);
 		}
 		return false;
 	}
@@ -73,7 +73,7 @@ public class Phrase {
 			}
 		}catch(Exception e){
 			Main.logger("Error while getting phrases:");
-			e.printStackTrace();
+			Main.ea.alert(e);
 		}
 		return null;
 	}

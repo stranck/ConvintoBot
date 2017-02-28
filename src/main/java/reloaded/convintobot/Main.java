@@ -27,6 +27,7 @@ public class Main {
 			skipOnlineCheck = false,
 			tempLine = true;
 	public static Settings st = new Settings();
+	public static ExceptionAlert ea;
 	
 	public static void main(String[] args){
 		
@@ -39,10 +40,9 @@ public class Main {
 		Info i = new Info();
 		ArrayList<Live> l = new ArrayList<Live>();
 		
-		byte checkUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
+		byte checkUpdate, maxCheckUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
 		boolean switchLiveVideo = true;
-		int liveIndex = 0;
-		int offset = 0;
+		int liveIndex = 0, offset = 0, millsDelay = 500;
 		
 		if(!st.loadSettings(startTime)) {
 			logger("Error while loading settings file");
@@ -52,17 +52,21 @@ public class Main {
 		yt.initialize(st);
 		f.initialize();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
+		ea = new ExceptionAlert(bot, c);
 		
-		for (String s: args) {
-        	switch(s){
-        		case("-l"): {link = true; break;}
-        		case("-s"): {stat = true; break;}
-        		case("-d"): {st.removeDirectory(); break;}
-        		case("-ml"):{moveLog(); break;}
-        		case("-o"): {skipOnlineCheck = true; break;}
+		for (int n = 0; n < args.length; n++) {
+        	switch(args[n]){
+        		case"-l": {link = true; break;}
+        		case"-s": {stat = true; break;}
+        		case"-d": {st.removeDirectory(); break;}
+        		case"-ml":{moveLog(); break;}
+        		case"-o": {skipOnlineCheck = true; break;}
+        		case"-dg":{maxCheckUpdate = Byte.valueOf(args[++n]); break;}
+        		case"-dt":{millsDelay = Integer.parseInt(args[++n]); break;}
         	}
     	}
-		
+        checkUpdate = maxCheckUpdate;
+        	
 		bot.execute(new SendMessage("-1001063772015" , "*bot is again online on " + st.getChatId() + ".*\n"
     		+ "Youtube ID: " + st.getChannelId() + "\n_[version: " + version + "]_\n").parseMode(ParseMode.Markdown));
 		
@@ -137,7 +141,7 @@ public class Main {
 						switchLiveVideo = true;
 						logger("");
 					}
-					checkUpdate = 0x11;
+					checkUpdate = maxCheckUpdate;
 				}
 				//telegram
 				
@@ -146,17 +150,19 @@ public class Main {
     			for(Update update : updates) {
     				
     				offset = update.updateId() + 1;
+    				String text = null;
     				try{
-    					logger(update.message().chat().id() + ">" + update.message().text());
+    					text = update.message().text();
+    					logger(update.message().chat().id() + ">" + text);
     				}catch(Exception e) {}
     				
     				for(Commands cmd : c){
-    					if(cmd.isThisCommand(update.message().text())){
+    					if(text != null && cmd.isThisCommand(text)){
     						boolean admin = st.getAdmins().contains(update.message().from().id().toString());
-    						int response = cmd.commandExecute(update.message().text(), bot, update, st, i, admin);
+    						int response = cmd.commandExecute(text, bot, update, st, i, admin);
     						
     						if(admin){
-    							String[] sp = update.message().text().split("\\s+");
+    							String[] sp = text.split("\\s+");
     							
     							switch(response){
     								case 0: break;
@@ -189,6 +195,10 @@ public class Main {
     									
     									String all = "";
 										for(int n = 4; n < sp.length; n++) all += sp[n] + " ";
+										try{
+											all = all.substring(0, all.length() - 1);
+										}catch(Exception e){}
+										
     									switch(sp[2]){
     										
     										case"newFile": {FileO.newFile(sp[3]); break;}
@@ -210,6 +220,8 @@ public class Main {
     									if(sp.length > 2){
     										String program = "";
     										for(int n = 2; n < sp.length; n++) program += sp[n] + " ";
+    										program = program.substring(0, program.length() - 1);
+    										
     										if(!FileO.exist("programmed.ini"))
     											FileO.newFile("programmed.ini"); else
     											bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
@@ -217,6 +229,31 @@ public class Main {
     									} else if(FileO.exist("programmed.ini")){
     										bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
     										FileO.delater("programmed.ini");
+    									}	
+    									
+    								}	
+    								case 5: { //html
+    									
+    									String all = "";
+										for(int n = 3; n < sp.length; n++) all += sp[n] + " ";
+										try{
+											all = all.substring(0, all.length() - 1);
+										}catch(Exception e){}
+										
+    									switch(sp[2]){
+    										case"to": {
+    											bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.toHtml(all)));
+    											break;
+    										}
+    										case"from": {
+    											try{
+    												bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.fromHtml(all)));
+    											}catch(Exception e){
+    												bot.execute(new SendMessage(update.message().chat().title().toString(), "Error: " + e));
+    											}
+    											break;
+    										}
+    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
     									}
     									
     								}
@@ -227,8 +264,8 @@ public class Main {
     				}
     			}
 				
-			}catch(Exception e){e.printStackTrace();}	
-			wait(500);
+			}catch(Exception e){ea.alert(e);}	
+			wait(millsDelay);
 		}
 	}
 	

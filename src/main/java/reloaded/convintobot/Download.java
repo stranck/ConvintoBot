@@ -28,9 +28,9 @@ public class Download {
         	} else check = check + line;
         }
     } catch (MalformedURLException mue) {
-         mue.printStackTrace();
+         Main.ea.alert(mue);
     } catch (IOException ioe) {
-         ioe.printStackTrace();
+    	Main.ea.alert(ioe);
     } finally {
         try {
             if (is != null) is.close();
