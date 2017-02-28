@@ -1,0 +1,15 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : true,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+"ALL STAT ARE ONLY OF THIS SESSION!!!\n\nPhrase status: %phraseStatus%\nChannel id: %id%\nChat id: %chat%\nBot name: %botName%\nDefault directory: %dir%\nUptime: %uptime%\nVersion: %version%\n\nProgrammed by <a href=\"youtube.com/c/StranckAnalTeam\">Stranck</a>.",
+"STATS:\nPhrase status: %phraseStatus%\nChannel id: %id%\nChat id: %chat%\nBot name: %botName%\nDefault directory: %dir%\nUptime: %uptime%\nVersion: %version%\n"
+		],
+		"args" : {
+		    	"low" : 1
+		}
+	}
+}

@@ -1,0 +1,13 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"Vuoi vedere quale convinzione si cela tra i miei codici?\nBene, <a href=\"https://github.com/stranck/ConvintoBot\">premi qui</a>!"
+		],
+		"args" : {
+		}
+	}
+}

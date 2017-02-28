@@ -1,0 +1,22 @@
+{
+    "commandType" : 0,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : true,
+	"responseData" : {
+		"response" : [
+			"1",
+			"2",
+			"3",
+			"4",
+			"5"
+		],
+		"args" : {
+			"force" : 0,
+			"reload" : 1,
+			"file" : 2,
+			"program" : 3,
+			"html" : 4
+		}
+	}
+}

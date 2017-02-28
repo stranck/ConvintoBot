@@ -1,0 +1,13 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"%lastvideo%"
+		],
+		"args" : {
+		}
+	}
+}

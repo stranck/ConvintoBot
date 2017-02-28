@@ -1,0 +1,23 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : true,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+		    "Salve! Benvenuto in %botName% :D\n
+Questo bot ha il compito di condividere tutti i nuovi video di chivuoitu sul canale telegram sempre di chivuoitu, in questo caso %chat%.\n
+\nEcco qui una piccola lista di comandi:\n
+/last per ottenere l'ultimo mio video.\n
+/github per ottenere il link di github contenente il mio codice.\n
+/start o /help per visualizzare questo messaggio.\n
+/news per ricevere le notizie su questo ed altri bot del mio creatore.\n
+/stat per vedere le statistiche della sessione corrente del bot.\n\n
+Per bug report, maggiori informazioni o se vuoi usarmi per il tuo canale youtube contattami per email qui: public.stranck@gmail.com",
+            "Come mi hai scoperto? D:"
+		],
+		"args" : {
+		    "testsegreto" : 1
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"Pong",
+			"Peng",
+			"Non so come rispondere."
+		],
+		"args" : {
+			"pang" : 1,
+			"pung" : 2
+		}
+	}
+}

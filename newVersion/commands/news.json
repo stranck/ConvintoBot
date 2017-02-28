@@ -1,0 +1,20 @@
+{
+    "commandType" : 4,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"Qui sotto il canale con tutte le news del mio creatore!"
+		],
+		"args" : {
+		},
+		"inline" : [
+			{
+				"type" : 0,
+				"text" : "Click me >.<",
+				"data" : "https://t.me/MultychatNews"
+			}
+		]
+	}
+}
