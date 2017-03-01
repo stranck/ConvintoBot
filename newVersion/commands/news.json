@@ -10,11 +10,13 @@
 		"args" : {
 		},
 		"inline" : [
-			{
-				"type" : 0,
-				"text" : "Click me >.<",
-				"data" : "https://t.me/MultychatNews"
-			}
+			[
+				{
+					"type" : 0,
+					"text" : "Click me >.<",
+					"data" : "https://t.me/MultychatNews"
+				}
+			]
 		]
 	}
 }

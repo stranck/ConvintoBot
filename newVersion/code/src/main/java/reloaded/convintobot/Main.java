@@ -262,6 +262,16 @@ public class Main {
 		}
 	}
 	
+	public static String getNameFromPath(String path){
+		String[] file = path.split("\\\\");
+		String[] name = file[file.length - 1].split("\\.");
+		if(name.length==1) return name[0];
+		String ret = "";
+		for(int i = 0; i < name.length - 1; i++) ret += name[i] + ".";
+		ret = ret.substring(0, ret.length() - 1);
+		return ret;
+    }
+	
 	public static String convertToLink(String id, String title){
 		return "<a href=\"https://youtu.be/" + id + "\">" + title + "</a>";
 	}
@@ -289,7 +299,7 @@ public class Main {
 	public static ArrayList<Commands> initializeCmds(){
 		ArrayList<Commands> c = new ArrayList<Commands>();
 		File[] listOfFiles = new File("commands" + File.separator).listFiles();
-		for(File f : listOfFiles) c.add(new Commands(f.getName().split("\\.")[0]));
+		for(File f : listOfFiles) c.add(new Commands(getNameFromPath(f.getName())));
 		return c;
 	}
 	

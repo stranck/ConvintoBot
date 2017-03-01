@@ -27,7 +27,7 @@ public class Commands {
 	private boolean randomResponse, webPagePreview, onlyAdmin;
 	private String command;
 	private Response response = new Response(); // /test a
-	ArrayList<Inline> inline = new ArrayList<Inline>();
+	ArrayList<ArrayList<Inline>> inline = new ArrayList<ArrayList<Inline>>();
 	
 	public Commands(String cmd){
 		try{
@@ -46,8 +46,7 @@ public class Commands {
 			
 			if(commandType == 4) {
 				JSONArray il = json.getJSONArray("inline");
-				for(int i = 0; i < il.length(); i++) 
-					inline.add(new Inline(il.getJSONObject(i).getString("text"), il.getJSONObject(i).getString("data"), il.getJSONObject(i).getInt("type")));
+				for(int i = 0; i < il.length(); i++) inline.add(getArrayList(il.getJSONArray(i)));
 			}
 			
 		}catch(Exception e){
@@ -85,8 +84,11 @@ public class Commands {
 					break;
 				}
 				case 4: {
+					String sp[] = cmd.split("\\s+");
+					int n;
+					if(sp.length > 1) n = response.getArgs().getInt(sp[1]); else n = 0;
 					ArrayList<InlineKeyboardButton> ikb = new ArrayList<InlineKeyboardButton>();
-					for(Inline in : inline) ikb.add(in.getButton());
+					for(Inline in : inline.get(n)) ikb.add(in.getButton());
 					bot.execute(new SendMessage(update.message().chat().id().toString(), send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))));
 				}
 			}
@@ -124,5 +126,12 @@ public class Commands {
 			default: 		ret = "Video:";
 		}
 		return ret + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
+	}
+	
+	private ArrayList<Inline> getArrayList(JSONArray il){
+		ArrayList<Inline> ret = new ArrayList<Inline>();
+		for(int i = 0; i < il.length(); i++)
+			ret.add(new Inline(il.getJSONObject(i).getString("text"), il.getJSONObject(i).getString("data"), il.getJSONObject(i).getInt("type")));
+		return ret;
 	}
 }

@@ -14,12 +14,9 @@ public class Youtube {
 		
 		while(true){
     		try{
-	    		//System.out.println("START");
     			JSONObject obj = new JSONObject(Download.dwn(s.getGoogleApiFullUrl(16)));
-	    		//System.out.println("END");
 	    		JSONArray arr = obj.getJSONArray("items");
 	    		for(int i = 0; i < arr.length(); i++) oldVideoIds.add(arr.getJSONObject(i).getJSONObject("id").getString("videoId"));
-	    		//System.out.println("DONE");
 	    		break;
     		}catch(Exception e){
     			Main.ea.alert(e);
@@ -29,7 +26,7 @@ public class Youtube {
 		
 		if(!FileO.exist("last.ini")) {
 			FileO.newFile("last.ini");
-			FileO.writer("thisisatest@uItXIawwf8k@0", "last.ini");
+			FileO.writer("thisisatest@S0vzZBxXRB4@0", "last.ini");
 		}
 		Main.logger("Done!");
 	}
@@ -46,8 +43,8 @@ public class Youtube {
 			return true;
 		}
 		if(!oldVideoIds.contains(id)){
-			oldVideoIds.remove(0);
-			oldVideoIds.add(id);
+			oldVideoIds.remove(oldVideoIds.size() - 1);
+			oldVideoIds.add(0, id);
 			return true;
 		}
 		return false;
