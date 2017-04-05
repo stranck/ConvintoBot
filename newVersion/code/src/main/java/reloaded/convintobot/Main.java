@@ -11,6 +11,7 @@ import com.pengrad.telegrambot.TelegramBotAdapter;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.EditMessageText;
+import com.pengrad.telegrambot.request.GetMe;
 import com.pengrad.telegrambot.request.GetUpdates;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.GetUpdatesResponse;
@@ -19,8 +20,8 @@ import reloaded.convintobot.tResponse.Commands;
 
 public class Main {
 	
-	public static final String version = "official2.0.02282017"; //MMddYYYY
-	public static boolean link = true, tempLine = true;
+	public static final String version = "official2.1.03222017"; //MMddYYYY
+	public static boolean link = false, tempLine = true;
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
 	
@@ -48,6 +49,8 @@ public class Main {
 		f.initialize();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
 		ea = new ExceptionAlert(bot, c);
+		st.setUser(bot.execute(new GetMe()).user().username());
+		if(st.getWhatBotName()) st.setBotName(bot.execute(new GetMe()).user().firstName());
 		
 		for (int n = 0; n < args.length; n++) {
         	switch(args[n]){
@@ -150,7 +153,7 @@ public class Main {
     				}catch(Exception e) {}
     				
     				for(Commands cmd : c){
-    					if(text != null && cmd.isThisCommand(text)){
+    					if(text != null && cmd.isThisCommand(text, st.getUser())){
     						boolean admin = st.getAdmins().contains(update.message().from().id().toString());
     						int response = cmd.commandExecute(text, bot, update, st, i, admin);
     						
@@ -198,11 +201,11 @@ public class Main {
     										case"newPath": {FileO.newPath(sp[3]); break;}
     										case"edit": {FileO.writer(sp[3], all); break;}
     										case"addLine": {FileO.addWrite(all, sp[3]); break;}
-    										case"read": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.allLine(sp[3]))); break;}
+    										case"read": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.allLine(sp[3])).parseMode(ParseMode.HTML)); break;}
     										case"delete": {FileO.delater(sp[3]); break;}
     										case"cod": {FileO.toHtml(sp[3]); break;}
     										case"decod": {FileO.fromHtml(sp[3]); break;}
-    										case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3]))); break;}
+    										case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3])).parseMode(ParseMode.HTML)); break;}
     										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
     									
     									}
@@ -217,12 +220,13 @@ public class Main {
     										
     										if(!FileO.exist("programmed.ini"))
     											FileO.newFile("programmed.ini"); else
-    											bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
+    												bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
     										FileO.writer(program, "programmed.ini");
     									} else if(FileO.exist("programmed.ini")){
-    										bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")"));
+    										bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
     										FileO.delater("programmed.ini");
-    									}	
+    									}
+    									break;
     									
     								}	
     								case 5: { //html
@@ -253,6 +257,7 @@ public class Main {
     							}
     							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
     						}
+    						break;
     					}
     				}
     			}

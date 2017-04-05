@@ -8,8 +8,8 @@ import org.json.JSONObject;
 
 public class Settings {
 	private long startTime;
-	private boolean phraseStatus;
-	private String gToken, tToken, id, chat, botName, dir = "";
+	private boolean phraseStatus, useBotName = false;
+	private String gToken, tToken, id, chat, botName, user, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
 	public boolean loadSettings(long sTime){
 		try {
@@ -38,7 +38,10 @@ public class Settings {
 			tToken = config.getString("tToken");
 			id = config.getString("id");
 			chat = config.getString("chat");
-			botName = config.getString("botName");
+			if(config.has("botName")) botName = config.getString("botName"); else {
+				useBotName = true;
+				Main.loggerL("Using telegram bot name. ");
+			}
 			startTime = sTime;
 			Main.logger("done");
 			
@@ -74,14 +77,26 @@ public class Settings {
 	public String getDefaultDirectory(){
 		return dir;
 	}
+	public String getUser(){
+		return user;
+	}
 	public boolean getPhraseStatus(){
 		return phraseStatus;
+	}
+	public boolean getWhatBotName(){
+		return useBotName;
 	}
 	public void setPhraseStatus(boolean status){
 		phraseStatus = status;
 	}
 	public void removeDirectory(){
 		dir = "";
+	}
+	public void setUser(String usr){
+		user = usr;
+	}
+	public void setBotName(String name){
+		botName = name;
 	}
 	public String getGoogleApiFullUrl(int n){
 		return "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=" + id + "&order=date&type=video&key=" + gToken + "&maxResults=" + n;

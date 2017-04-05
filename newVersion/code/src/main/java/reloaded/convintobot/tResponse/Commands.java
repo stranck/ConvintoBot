@@ -55,42 +55,43 @@ public class Commands {
 		}
 	}
 	
-	public boolean isThisCommand(String cmd){
+	public boolean isThisCommand(String cmd, String botUser){
 		try{
-			if(command.equalsIgnoreCase("/start") && cmd.split("\\s+").length > 1) return false;
-			return cmd.split("\\s+")[0].equalsIgnoreCase(command) || ("/start " + cmd.split("\\s+")[1]).equalsIgnoreCase("/start " + command.substring(1, command.length()));
+			String[] sp = cmd.split("\\s+");
+			if(command.equalsIgnoreCase("/start") && sp.length > 1) return false;
+			return sp[0].equalsIgnoreCase(command) || (sp[0].equalsIgnoreCase("/start") && sp[1].equalsIgnoreCase(command.substring(1, command.length()))) || sp[0].equalsIgnoreCase(command + "@" + botUser);
 		}catch(Exception e){}
 		return false;
 	}
 	public int commandExecute(String cmd, TelegramBot bot, Update update, Settings st, Info i, boolean admin){
 		try{
 			String send = getString(cmd, st, i);
-			
+
 			if((onlyAdmin==admin)||admin)
-			switch(commandType){
-				case 0: {
-					return Integer.parseInt(send);
-				}
-				case 1: {
-					bot.execute(new SendMessage(update.message().chat().id().toString(), send).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
-					break;
-				}
-				case 2: {
-					bot.execute(new SendPhoto(update.message().chat().id().toString(), send));
-					break;
-				}
-				case 3: {
-					bot.execute(new SendAudio(update.message().chat().id().toString(), send));
-					break;
-				}
-				case 4: {
-					String sp[] = cmd.split("\\s+");
-					int n;
-					if(sp.length > 1) n = response.getArgs().getInt(sp[1]); else n = 0;
-					ArrayList<InlineKeyboardButton> ikb = new ArrayList<InlineKeyboardButton>();
-					for(Inline in : inline.get(n)) ikb.add(in.getButton());
-					bot.execute(new SendMessage(update.message().chat().id().toString(), send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))));
-				}
+				switch(commandType){
+					case 0: {
+						return Integer.parseInt(send);
+					}
+					case 1: {
+						bot.execute(new SendMessage(update.message().chat().id().toString(), send).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
+						break;
+					}
+					case 2: {
+						bot.execute(new SendPhoto(update.message().chat().id().toString(), send));
+						break;
+					}
+					case 3: {
+						bot.execute(new SendAudio(update.message().chat().id().toString(), send));
+						break;
+					}
+					case 4: {
+						String sp[] = cmd.split("\\s+");
+						int n;
+						if(sp.length > 1) n = response.getArgs().getInt(sp[1]); else n = 0;
+						ArrayList<InlineKeyboardButton> ikb = new ArrayList<InlineKeyboardButton>();
+						for(Inline in : inline.get(n)) ikb.add(in.getButton());
+						bot.execute(new SendMessage(update.message().chat().id().toString(), send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
+					}
 			}
 		}catch(Exception e){Main.logger("" + e);}
 		return 0;
@@ -100,13 +101,13 @@ public class Commands {
 		String sp[] = cmd.split("\\s+");
 		Random r = new Random();
 		String send;
-	
+
 		if(!randomResponse) 
-			if(sp.length > 1) send = response.getResponse().get(response.getArgs().getInt(sp[1]));
+			if(sp.length > 1 && !sp[0].equalsIgnoreCase("/start")) send = response.getResponse().get(response.getArgs().getInt(sp[1]));
 				else send = response.getResponse().get(0);
 		else send = response.getResponse().get(r.nextInt(response.getResponse().size()));
 		return send
-				.replaceAll("%phraseStatus%", String.valueOf(st.getPhraseStatus()))
+				.replaceAll("%phraseStatus%", String.valueOf(!st.getPhraseStatus()))
 				.replaceAll("%gToken%", st.getGoogleToken())
 				.replaceAll("%tToken%", st.getTelegramToken())
 				.replaceAll("%id%", st.getChannelId())
@@ -115,7 +116,8 @@ public class Commands {
 				.replaceAll("%dir%", st.getDefaultDirectory())
 				.replaceAll("%uptime%", st.getUpTime())
 				.replaceAll("%lastvideo%", last(i))
-				.replaceAll("%version%", Main.version);
+				.replaceAll("%version%", Main.version)
+				.replaceAll("%programmed%", String.valueOf(FileO.exist("programmed.ini")));
 	}
 	
 	private String last(Info i){
