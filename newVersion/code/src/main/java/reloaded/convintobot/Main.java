@@ -20,7 +20,7 @@ import reloaded.convintobot.tResponse.Commands;
 
 public class Main {
 	
-	public static final String version = "official2.1.03222017"; //MMddYYYY
+	public static final String version = "official2.1.04052017"; //MMddYYYY
 	public static boolean link = false, tempLine = true;
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
@@ -45,10 +45,10 @@ public class Main {
 			return;
 		}
 		ArrayList<Commands> c = initializeCmds();
-		yt.initialize(st);
-		f.initialize();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
 		ea = new ExceptionAlert(bot, c);
+		yt.initialize(st);
+		f.initialize();
 		st.setUser(bot.execute(new GetMe()).user().username());
 		if(st.getWhatBotName()) st.setBotName(bot.execute(new GetMe()).user().firstName());
 		
