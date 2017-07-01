@@ -57,9 +57,8 @@ public class FileO {
     	File file = new File(Main.st.getDefaultDirectory() + path);
         try{
           file.createNewFile();
-        }
-        catch(IOException ioe){
-        	Main.logger("Error while creating a new empty file :" + ioe);
+        } catch(Exception e){
+        	Main.ea.alert(e);
         }
     }
     public static boolean exist(String path){

@@ -2,6 +2,7 @@ package reloaded.convintobot.tResponse;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.json.JSONArray;
@@ -19,7 +20,9 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import reloaded.convintobot.FileO;
 import reloaded.convintobot.Info;
 import reloaded.convintobot.Main;
+import reloaded.convintobot.Phrase;
 import reloaded.convintobot.Settings;
+import reloaded.convintobot.Twitch;
 
 
 public class Commands {
@@ -31,6 +34,7 @@ public class Commands {
 	
 	public Commands(String cmd){
 		try{
+			Main.LOGGER.config("Loading command: " + cmd);
 			JSONObject data = new JSONObject(FileO.allLine("commands" + File.separator + cmd + ".json"));
 		
 			commandType = data.getInt("commandType");
@@ -50,7 +54,7 @@ public class Commands {
 			}
 			
 		}catch(Exception e){
-			Main.logger("Error while loading command " + cmd);
+			Main.LOGGER.warning("Error while loading command " + cmd);
 			e.printStackTrace();
 		}
 	}
@@ -63,9 +67,9 @@ public class Commands {
 		}catch(Exception e){}
 		return false;
 	}
-	public int commandExecute(String cmd, TelegramBot bot, Update update, Settings st, Info i, boolean admin){
+	public int commandExecute(String cmd, TelegramBot bot, Update update, Settings st, Info i, Twitch t, Phrase f, boolean admin){
 		try{
-			String send = getString(cmd, st, i);
+			String send = getString(cmd, st, i, t, f);
 
 			if((onlyAdmin==admin)||admin)
 				switch(commandType){
@@ -93,11 +97,11 @@ public class Commands {
 						bot.execute(new SendMessage(update.message().chat().id().toString(), send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
 					}
 			}
-		}catch(Exception e){Main.logger("" + e);}
+		}catch(Exception e){Main.ea.alert(e);}
 		return 0;
 	}
 	
-	public String getString(String cmd, Settings st, Info i){
+	public String getString(String cmd, Settings st, Info i, Twitch t, Phrase f){
 		String sp[] = cmd.split("\\s+");
 		Random r = new Random();
 		String send;
@@ -107,7 +111,7 @@ public class Commands {
 				else send = response.getResponse().get(0);
 		else send = response.getResponse().get(r.nextInt(response.getResponse().size()));
 		return send
-				.replaceAll("%phraseStatus%", String.valueOf(!st.getPhraseStatus()))
+				.replaceAll("%phraseStatus%", Arrays.toString(st.getPhraseStatus()))
 				.replaceAll("%gToken%", st.getGoogleToken())
 				.replaceAll("%tToken%", st.getTelegramToken())
 				.replaceAll("%id%", st.getChannelId())
@@ -115,19 +119,20 @@ public class Commands {
 				.replaceAll("%botName%", st.getBotName())
 				.replaceAll("%dir%", st.getDefaultDirectory())
 				.replaceAll("%uptime%", st.getUpTime())
-				.replaceAll("%lastvideo%", last(i))
+				.replaceAll("%lastvideo%", last(i, f, st, t))
+				.replaceAll("%twitch%", twitch(t, st, f))
 				.replaceAll("%version%", Main.version)
 				.replaceAll("%programmed%", String.valueOf(FileO.exist("programmed.ini")));
 	}
 	
-	private String last(Info i){
-		String ret;
-		switch(i.getVideoType()){
-			case"live":     ret = "In live ora:";
-			case"upcoming": ret = "Live programmata:";
-			default: 		ret = "Video:";
-		}
-		return ret + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
+	private String twitch(Twitch t, Settings st, Phrase f){
+		int i = 7;
+		if(t.getIfInLive()) i--;
+		return f.getSinglePhrases(i, st, t) + FileO.toHtml(t.getGame()) + "\n" + st.getTwitchClickableTitle(t.getTitle());
+	}
+	
+	private String last(Info i, Phrase f, Settings st, Twitch t){
+		return f.getSinglePhrases(Main.convertType(i.getVideoId()), st, t) + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
 	}
 	
 	private ArrayList<Inline> getArrayList(JSONArray il){

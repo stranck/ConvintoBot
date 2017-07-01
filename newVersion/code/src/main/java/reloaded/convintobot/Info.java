@@ -1,5 +1,6 @@
 package reloaded.convintobot;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Info {
@@ -22,14 +23,20 @@ public class Info {
 	}
 	
 	public String getVideoType(String id, Settings s){
-		while(true){
+		String ret = "";
+		while(ret.equals("")){
 			try{
-				return new JSONObject(Download.dwn(s.getUrlVideoType(id))).getJSONArray("items").getJSONObject(0).getJSONObject("snippet").getString("liveBroadcastContent");
+				JSONArray items = new JSONObject(Download.dwn(s.getUrlVideoType(id))).getJSONArray("items");
+				if(items.length() > 0)
+					ret = items.getJSONObject(0).getJSONObject("snippet").getString("liveBroadcastContent");
+				else
+					ret = "none";
 			}catch(Exception e){
 				Main.ea.alert(e);
 				Main.wait(5000);
 			}
 		}
+		return ret;
 	}
 	
 	public String getVideoId(){
@@ -40,5 +47,13 @@ public class Info {
 	}
 	public String getVideoName(){
 		return name;
+	}
+	
+	public String toString(){
+    	return "Info{"
+				+ "id=" + id + ", "
+				+ "title='" + name + "', "
+				+ "type='" + type + "'"
+			+ "}";
 	}
 }

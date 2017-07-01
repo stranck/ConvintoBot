@@ -11,35 +11,34 @@ import java.net.URL;
 
 public class Download {
 	public static String dwn(String apii) throws ConnectException, InvocationTargetException{
-	boolean first = false;
-	String check = null;
-	URL url;
-    InputStream is = null;
-    BufferedReader br;
-    String line;
-    try {
-        url = new URL(apii);
-        is = url.openStream();
-        br = new BufferedReader(new InputStreamReader(is));
-        while ((line = br.readLine()) != null) {
-        	if(!first){
-        		check = line;
-        		first = true;
-        	} else check = check + line;
-        }
-    } catch (MalformedURLException mue) {
-         Main.ea.alert(mue);
-    } catch (IOException ioe) {
-    	Main.ea.alert(ioe);
-    } finally {
-        try {
-            if (is != null) is.close();
-        } catch (IOException ioe) {}
-    }
-    if(Main.link){
-        Main.logger("\n\nCheck:  " + apii);
-        Main.logger(check + "\n");
-    }
-    return check;
+		boolean first = false;
+		String check = null;
+		URL url;
+    	InputStream is = null;
+    	BufferedReader br;
+    	String line;
+    	try {
+    		url = new URL(apii);
+    		is = url.openStream();
+    		br = new BufferedReader(new InputStreamReader(is));
+        	while ((line = br.readLine()) != null) {
+        		if(!first){
+        			check = line;
+        			first = true;
+        		} else check = check + line;
+        	}
+    	} catch (MalformedURLException mue) {
+    		Main.ea.alert(mue);
+    	} catch (IOException ioe) {
+    		Main.ea.alert(ioe);
+    	} finally {
+    		try {
+    			if (is != null) is.close();
+    		} catch (IOException ioe) {}
+    	}
+    	Main.LOGGER.finest("Check:  " + apii);
+    	Main.LOGGER.finest(check);
+    
+    	return check;
 	}
 }

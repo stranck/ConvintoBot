@@ -13,6 +13,8 @@ public class ExceptionAlert {
 	private Info i = new Info();
 	private TelegramBot bot;
 	private Commands stat;
+	private Twitch t;
+	private Phrase f;
 	
 	public ExceptionAlert(TelegramBot b, ArrayList<Commands> c){
 		i.update(0, Main.st);
@@ -26,7 +28,7 @@ public class ExceptionAlert {
 		
 		try{
 			e.printStackTrace();
-			bot.execute(new SendMessage("-169611331", "An exception occurred\n\n" + stat.getString("/stat low", Main.st, i) + "\nException data:\n" + getThrow(e)));
+			bot.execute(new SendMessage("-169611331", "An exception occurred\n\n" + stat.getString("/stat low", Main.st, i, t, f) + "\nException data:\n" + getThrow(e)));
 		}catch(Exception sfiga){ //qui sarebbe il classisco "unexpected error occured while displaying an unexpected error"
 			Main.wait(5000);
 			sfiga.printStackTrace();

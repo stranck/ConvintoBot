@@ -10,7 +10,7 @@ public class Youtube {
 	private boolean forceNewVideo = false;
 	
 	public void initialize(Settings s){
-		Main.loggerL("Inizialazing youtube object... ");
+		Main.LOGGER.config("Inizialazing youtube object");
 		
 		while(true){
     		try{
@@ -28,7 +28,6 @@ public class Youtube {
 			FileO.newFile("last.ini");
 			FileO.writer("thisisatest@S0vzZBxXRB4@0", "last.ini");
 		}
-		Main.logger("Done!");
 	}
 	
 	//vado a magnà
