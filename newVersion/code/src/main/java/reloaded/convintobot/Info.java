@@ -16,6 +16,7 @@ public class Info {
 				name = snippet.getString("title");
 				return;
 			} catch (Exception e) {
+				e.printStackTrace();
 				Main.ea.alert(e);
 				Main.wait(5000);
 			}

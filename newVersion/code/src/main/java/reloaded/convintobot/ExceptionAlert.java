@@ -13,12 +13,13 @@ public class ExceptionAlert {
 	private Info i = new Info();
 	private TelegramBot bot;
 	private Commands stat;
-	private Twitch t;
+	private Twitch t = new Twitch();
 	private Phrase f;
 	
-	public ExceptionAlert(TelegramBot b, ArrayList<Commands> c){
+	public ExceptionAlert(TelegramBot b, ArrayList<Commands> c, Phrase ph){
 		i.update(0, Main.st);
 		bot = b;
+		f = ph; 
 		for(Commands cmd : c){
 			if(cmd.isThisCommand("/stat", Main.st.getUser())) stat = cmd;
 		}
@@ -32,7 +33,6 @@ public class ExceptionAlert {
 		}catch(Exception sfiga){ //qui sarebbe il classisco "unexpected error occured while displaying an unexpected error"
 			Main.wait(5000);
 			sfiga.printStackTrace();
-			alert(e);
 		}
 		
 	}

@@ -41,7 +41,7 @@ public class FileO {
         bufferedReader.close();
         return line;
     }
-    public static String allLine(String path) throws FileNotFoundException, IOException{
+    public static String aL(String path) throws FileNotFoundException, IOException{
     	String line;
 		String ret = "";
     	try (
@@ -52,6 +52,18 @@ public class FileO {
     	    while ((line = br.readLine()) != null) ret += line;
     	}
     	return ret;
+    }
+    public static String allLine(String path) throws FileNotFoundException, IOException{
+    	String line;
+		String ret = "";
+    	try (
+    	    InputStream fis = new FileInputStream(Main.st.getDefaultDirectory() + path);
+    	    InputStreamReader isr = new InputStreamReader(fis, Charset.forName("UTF-8"));
+    	    BufferedReader br = new BufferedReader(isr);
+    	) {
+    	    while ((line = br.readLine()) != null) ret += line + "\n";
+    	}
+    	return ret.substring(0, ret.length() - 1);
     }
     public static void newFile(String path){
     	File file = new File(Main.st.getDefaultDirectory() + path);

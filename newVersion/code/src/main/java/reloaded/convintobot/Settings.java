@@ -2,15 +2,17 @@ package reloaded.convintobot;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Settings {
-	private long startTime, repeatDelay, liveOfflineDelay;
-	private boolean repeat, onUpcoming, onStop, youtube, twitch, useBotName = false;
-	private String gToken, tToken, wToken, yId, tId, chat, botName, user, lessSpamMethod, dir = "";
+	private long startTime, liveOfflineDelay, repeatDelay = Long.MAX_VALUE;
+	private boolean youtube, twitch, mantainPhrase, useBotName = false;
+	private String gToken, tToken, wToken, yId, tId, botName, user, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
+	private ArrayList<Chats> chats = new ArrayList<Chats>();
 	private boolean phraseStatus[] = new boolean[8];
 	
 	public boolean loadSettings(long sTime){
@@ -23,26 +25,35 @@ public class Settings {
 				FileO.newFile("config.json");
 				FileO.writer("{", "config.json");
 				FileO.addWrite("config.json", "    \"tToken\" : \"INSERIT YOUR TELEGRAM TOKEN HERE\",");
-				FileO.addWrite("config.json", "    \"chat\" : \"INSERIT THE CHAT ID HERE\",");
 				FileO.addWrite("config.json", "    \"botName\" : \"INSERIT THE NAME OF YOUR BOT HERE\",");
-				FileO.addWrite("config.json", "    \"lessSpamMethod\" : \"DELETE / COMPRESS / NONE\",");
-				FileO.addWrite("config.json", "    \"liveOfflineDelay\" : \"HOW MANY MS PASS UNTIL A LIVE IS DECLEARED OFFLINE (prevent the disconnection)\",");
+				FileO.addWrite("config.json", "    \"liveOfflineDelay\" : HOW MANY MS PASS UNTIL A LIVE IS DECLEARED OFFLINE (prevent the disconnection),");
+				FileO.addWrite("config.json", "    \"notificationRepeatDelay\" : DELAY IN MS,");
+				FileO.addWrite("config.json", "    \"mantainPhrase\" : true / false");
 				FileO.addWrite("config.json", "    \"youtube\" : {");
-				FileO.addWrite("config.json", "        \"enable\" : \"true / false\",");
+				FileO.addWrite("config.json", "        \"enable\" : true / false,");
 				FileO.addWrite("config.json", "        \"gToken\" : \"INSERIT YOUR GOOGLE APIS TOKEN HERE\",");
-				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\"");
-				FileO.addWrite("config.json", "    }");
+				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\",");
+				FileO.addWrite("config.json", "    },");
 				FileO.addWrite("config.json", "    \"twitch\" : {");
-				FileO.addWrite("config.json", "        \"enable\" : \"true / false\",");
+				FileO.addWrite("config.json", "        \"enable\" : true / false,");
 				FileO.addWrite("config.json", "        \"token\" : \"INSERIT YOUR TWITCH CLIENT ID HERE\",");
 				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\"");
-				FileO.addWrite("config.json", "    }");
-				FileO.addWrite("config.json", "    \"liveNotification\" : {");
-				FileO.addWrite("config.json", "        \"onUpcoming\" : \"true / false\",");
-				FileO.addWrite("config.json", "        \"onStop\" : \"true / false\",");
-				FileO.addWrite("config.json", "        \"repeat\" : \"true / false\",");
-				FileO.addWrite("config.json", "        \"repeatDelay\" : \"DELAY IN MS\"");
-				FileO.addWrite("config.json", "    }");
+				FileO.addWrite("config.json", "    },");
+				FileO.addWrite("config.json", "    \"chats\" : [");
+				FileO.addWrite("config.json", "        {");
+				FileO.addWrite("config.json", "            \"chat\" : \"INSERIT THE CHAT ID HERE\",");
+				FileO.addWrite("config.json", "            \"lessSpamMethod\" : \"DELETE / COMPRESS / NONE\",");
+				FileO.addWrite("config.json", "            \"pinMessage\" : true / false,");
+				FileO.addWrite("config.json", "            \"disablePinNotification\" : true / false,");
+				FileO.addWrite("config.json", "            \"twitch\" : true / false,");
+				FileO.addWrite("config.json", "            \"youtube\" : true / false,");
+				FileO.addWrite("config.json", "            \"liveNotification\" : {");
+				FileO.addWrite("config.json", "                \"onUpcoming\" : true / false,");
+				FileO.addWrite("config.json", "                \"onStop\" : true / false,");
+				FileO.addWrite("config.json", "                \"repeat\" : true / false");
+				FileO.addWrite("config.json", "            }");
+				FileO.addWrite("config.json", "        }");
+				FileO.addWrite("config.json", "    ],");
 				FileO.addWrite("config.json", "    \"admins\" : [");
 				FileO.addWrite("config.json", "        \"INSERIT THE TELEGRAM ACCOUNT ID OF YOUR FIRST ADMIN HERE\",");
 				FileO.addWrite("config.json", "        \"INSERIT THE TELEGRAM ACCOUNT ID OF YOUR SECOND ADMIN HERE\",");
@@ -56,19 +67,18 @@ public class Settings {
 			Main.LOGGER.config("Loading configs");
 			JSONObject config = new JSONObject(FileO.allLine("config.json"));	
 			tToken = config.getString("tToken");
-			chat = config.getString("chat");
-			lessSpamMethod = config.getString("lessSpamMethod");
 			liveOfflineDelay = config.getLong("liveOfflineDelay");
+			mantainPhrase = config.getBoolean("mantainPhrase");
 			
 			JSONObject ytObj = config.getJSONObject("youtube"); 
 			if(ytObj.getBoolean("enable")){
-				twitch = true;
+				youtube = true;
 				gToken = ytObj.getString("gToken");
 				yId = ytObj.getString("id");
 			}
 			JSONObject twObj = config.getJSONObject("twitch"); 
-			if(ytObj.getBoolean("enable")){
-				youtube = true;
+			if(twObj.getBoolean("enable")){
+				twitch = true;
 				wToken = twObj.getString("token");
 				tId = twObj.getString("id");
 			}
@@ -82,13 +92,31 @@ public class Settings {
 			dir = System.getProperty("user.dir") + File.separator;
 			
 			JSONArray admin = config.getJSONArray("admins");
+			admins.clear();
 			for(int i = 0; i < admin.length(); i++) admins.add(admin.getString(i));
 			
-			JSONObject liveNotification = config.getJSONObject("liveNotification");
-			onUpcoming = liveNotification.getBoolean("onUpcoming");
-			onStop = liveNotification.getBoolean("onStop");
-			repeat = liveNotification.getBoolean("repeat");
-			if(repeat) repeatDelay = liveNotification.getLong("repeatDelay");
+			boolean rd = false;
+			chats.clear();
+			JSONArray arr = config.getJSONArray("chats");
+			for(int i = 0; i < arr.length(); i++){
+				Main.LOGGER.config("Loading settings for chat [" + i + "]");
+				JSONObject chat = arr.getJSONObject(i);
+				
+				String lessSpamMethod = chat.getString("lessSpamMethod");
+				if(!lessSpamMethod.equalsIgnoreCase("DELETE") && !lessSpamMethod.equalsIgnoreCase("COMPRESS") && !lessSpamMethod.equalsIgnoreCase("NONE") && !lessSpamMethod.equalsIgnoreCase("NOWEBPREVIEW")) {
+					Main.LOGGER.severe(lessSpamMethod + ": lessSpamMethod not valid.");
+					return false;
+				}
+				JSONObject liveNotification = chat.getJSONObject("liveNotification");
+				Chats c = new Chats(chat.getString("chat"), lessSpamMethod, chat.getBoolean("pinMessage"), liveNotification.getBoolean("onUpcoming"), liveNotification.getBoolean("onStop"), liveNotification.getBoolean("repeat"));
+				if(twitch) c.setIfTwitch(chat.getBoolean("twitch")); 
+				if(youtube) c.setIfYoutube(chat.getBoolean("youtube"));
+				
+				if(c.getIfPin()) c.setPiNotification(chat.getBoolean("disablePinNotification"));
+				if(c.getIfRepeat()) rd = true;
+				chats.add(c);
+			}
+			if(rd) repeatDelay = config.getLong("notificationRepeatDelay");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -102,9 +130,6 @@ public class Settings {
 	}
 	public String getBotName(){
 		return botName;
-	}
-	public String getChatId(){
-		return chat;
 	}
 	public String getChannelId(){
 		return yId;
@@ -121,9 +146,6 @@ public class Settings {
 	public String getUser(){
 		return user;
 	}
-	public String getLessSpamMethod(){
-		return lessSpamMethod;
-	}
 	public String getTwitchToken(){
 		return wToken;
 	}
@@ -139,26 +161,23 @@ public class Settings {
 	public boolean getWhatBotName(){
 		return useBotName;
 	}
-	public boolean getIfRepeat(){
-		return repeat;
-	}
-	public boolean getIfNotificationOnUpcoming(){
-		return onUpcoming;
-	}
-	public boolean getIfNotificationOnStop(){
-		return onStop;
-	}
 	public boolean getIfYoutube(){
 		return youtube;
 	}
 	public boolean getIfTwitch(){
 		return twitch;
 	}
-	public long getRepeatDelay(){
-		return repeatDelay;
+	public boolean getMantainPhrase(){
+		return mantainPhrase;
 	}
 	public long getOfflineDelay(){
 		return liveOfflineDelay;
+	}
+	public long getRepeatDelay(){
+		return repeatDelay;
+	}
+	public ArrayList<Chats> getChats(){
+		return chats;
 	}
 	public void setPhraseStatus(boolean[] status){
 		phraseStatus = status;
@@ -196,5 +215,10 @@ public class Settings {
 	    int mins = secs / 60;
 	    secs = secs - mins * 60;
 	    return hours + ":" + mins + ":" + secs;
+	}
+	public String getChatsId(){
+		String[] s = new String[chats.size()];
+		for(int i = 0; i < s.length; i++) s[i] = chats.get(i).getChatId();
+		return Arrays.toString(s);
 	}
 }

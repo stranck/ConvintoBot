@@ -7,7 +7,7 @@ import org.json.JSONObject;
 
 public class Youtube {
 	private ArrayList<String> oldVideoIds = new ArrayList<String>();
-	private boolean forceNewVideo = false;
+	private boolean forceNewVideo = false, forceNoVideo = false;
 	
 	public void initialize(Settings s){
 		Main.LOGGER.config("Inizialazing youtube object");
@@ -32,19 +32,26 @@ public class Youtube {
 	
 	//vado a magnà
 	
+	public void forceNoUpdate(boolean b){
+		forceNoVideo = b;
+	}
 	public void forceVideoUpdate(boolean b){
 		forceNewVideo = b;
 	}
 	
 	public boolean newVideo(String id){
+		
 		if(forceNewVideo) {
 			forceNewVideo = false;
 			return true;
 		}
+		
 		if(!oldVideoIds.contains(id)){
 			oldVideoIds.remove(oldVideoIds.size() - 1);
 			oldVideoIds.add(0, id);
-			return true;
+			
+			if(!forceNoVideo) return true;
+			forceNoVideo = false;
 		}
 		return false;
 	}

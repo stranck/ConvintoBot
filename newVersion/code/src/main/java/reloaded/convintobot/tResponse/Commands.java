@@ -1,6 +1,7 @@
 package reloaded.convintobot.tResponse;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -35,7 +36,7 @@ public class Commands {
 	public Commands(String cmd){
 		try{
 			Main.LOGGER.config("Loading command: " + cmd);
-			JSONObject data = new JSONObject(FileO.allLine("commands" + File.separator + cmd + ".json"));
+			JSONObject data = new JSONObject(FileO.aL("commands" + File.separator + cmd + ".json"));
 		
 			commandType = data.getInt("commandType");
 			randomResponse = data.getBoolean("randomResponse");
@@ -101,7 +102,7 @@ public class Commands {
 		return 0;
 	}
 	
-	public String getString(String cmd, Settings st, Info i, Twitch t, Phrase f){
+	public String getString(String cmd, Settings st, Info i, Twitch t, Phrase f) throws IOException{
 		String sp[] = cmd.split("\\s+");
 		Random r = new Random();
 		String send;
@@ -115,7 +116,7 @@ public class Commands {
 				.replaceAll("%gToken%", st.getGoogleToken())
 				.replaceAll("%tToken%", st.getTelegramToken())
 				.replaceAll("%id%", st.getChannelId())
-				.replaceAll("%chat%", st.getChatId())
+				.replaceAll("%chat%", st.getChatsId()).replace("]", "").replace("[", "")
 				.replaceAll("%botName%", st.getBotName())
 				.replaceAll("%dir%", st.getDefaultDirectory())
 				.replaceAll("%uptime%", st.getUpTime())
@@ -125,13 +126,13 @@ public class Commands {
 				.replaceAll("%programmed%", String.valueOf(FileO.exist("programmed.ini")));
 	}
 	
-	private String twitch(Twitch t, Settings st, Phrase f){
+	private String twitch(Twitch t, Settings st, Phrase f) throws IOException{
 		int i = 7;
 		if(t.getIfInLive()) i--;
-		return f.getSinglePhrases(i, st, t) + FileO.toHtml(t.getGame()) + "\n" + st.getTwitchClickableTitle(t.getTitle());
+		return f.getSinglePhrases(i, st, t) + "\n" + st.getTwitchClickableTitle(t.getTitle());
 	}
 	
-	private String last(Info i, Phrase f, Settings st, Twitch t){
+	private String last(Info i, Phrase f, Settings st, Twitch t) throws IOException{
 		return f.getSinglePhrases(Main.convertType(i.getVideoId()), st, t) + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
 	}
 	

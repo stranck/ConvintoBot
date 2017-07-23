@@ -1,15 +1,17 @@
 package reloaded.convintobot;
 
 public class Live {
-	private String id, title;
-	private int type, messageId;
+	private String id, title, mText;
+	private int type;
+	private int[] messageId;
 	private long notificationCycle, liveOffline;
 	
-	public Live(String name, String liveId, int videoType, int mId){
+	public Live(String name, String liveId, String s, int videoType, int[] mId){
 		title = name;
 		id = liveId;
 		type = videoType;
 		messageId = mId;
+		mText = s;
 		//if(type==2) upcoming = true;
 	}
 
@@ -23,7 +25,7 @@ public class Live {
 		liveOffline = n;
 	}
 	
-	public int getMessageId(){
+	public int[] getMessageId(){
 		return messageId; 
 	}
 	public int getType(){
@@ -40,6 +42,9 @@ public class Live {
 	}
 	public String getTitle(){
 		return title;
+	}
+	public String getMText(){
+		return mText;
 	}
 	
 	public String toString(){

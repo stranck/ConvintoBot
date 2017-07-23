@@ -8,9 +8,11 @@ import org.json.JSONObject;
 
 public class Twitch {
 	private boolean goneOnline = true;
-	private int messageId;
+	private int[] messageId;
 	private long liveOffline, notificationCycle;
-	private String title = "", game = "";
+	private String title = "", game = "", mText = "";
+	
+	public Twitch(){}
 	
 	public Twitch(Settings st){
 		Main.LOGGER.config("Initializing Twitch object");
@@ -45,13 +47,16 @@ public class Twitch {
 		return ret;
 	}
 	
+	public String getMText(){
+		return mText;
+	}
 	public String getGame(){
 		return game;
 	}
 	public String getTitle(){
 		return title;
 	}
-	public int getMessageId(){
+	public int[] getMessageId(){
 		return messageId;
 	}
 	public long getNotificationCycle(){
@@ -61,7 +66,10 @@ public class Twitch {
 		return !goneOnline;
 	}
 	
-	public void setMessageId(int n){
+	public void setMText(String s){
+		mText = s;
+	}
+	public void setMessageId(int[] n){
 		messageId = n;
 	}
 	public void setNotificationCycle(long n){

@@ -20,9 +20,9 @@ import com.pengrad.telegrambot.request.DeleteMessage;
 import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.GetMe;
 import com.pengrad.telegrambot.request.GetUpdates;
+import com.pengrad.telegrambot.request.PinChatMessage;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.GetUpdatesResponse;
-import com.pengrad.telegrambot.response.SendResponse;
 
 import reloaded.convintobot.Main;
 import reloaded.convintobot.tResponse.Commands;
@@ -31,7 +31,7 @@ public class Main {
 	
 	
 	public static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-	public static final String version = "official2.2.07012017"; //MMddYYYY
+	public static final String version = "official2.3.07232017"; //MMddYYYY
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
 	
@@ -68,7 +68,7 @@ public class Main {
 		ArrayList<Commands> c = initializeCmds();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
 		Twitch t = new Twitch(st);
-		ea = new ExceptionAlert(bot, c);
+		ea = new ExceptionAlert(bot, c, f);
 		yt.initialize(st);
 		st.setPhraseStatus(f.initialize());
 		st.setUser(bot.execute(new GetMe()).user().username());
@@ -82,7 +82,7 @@ public class Main {
         	}
     	}
         	
-		bot.execute(new SendMessage("-1001063772015" , "*bot is again online on " + st.getChatId() + ".*\n"
+		bot.execute(new SendMessage("-1001063772015" , "*bot is again online on " + st.getChatsId() + ".*\n"
     		+ "Youtube ID: " + st.getChannelId() + "\n_[version: " + version + "]_\n").parseMode(ParseMode.Markdown));
 		
 		LOGGER.config("Startup done!");
@@ -101,20 +101,16 @@ public class Main {
 							
 							//new video founded
 							LOGGER.info("New update found! " + i.toString());
-							lessSpam(bot);
+							lessSpam(bot, st.getChats());
 							int type = convertType(i.getVideoType()); //stuff & get if any phrase is programmed
 							String mText = f.getSinglePhrases(type, st, t);
-							if(FileO.exist("programmed.ini")) {
-								mText = FileO.reader("programmed.ini");
-								FileO.delater("programmed.ini");
-							}
 							
-							int msId = bot.execute(new SendMessage(st.getChatId(), mText + "\n" + //send message
-									convertToLink(i.getVideoId(), FileO.toHtml(i.getVideoName()))).parseMode(ParseMode.HTML)).message().messageId();
+							int msId[] = sendYoutubeMessage(bot, st.getChats(), mText, i);
+							pinMessage(bot, st.getChats(), msId, true);
 							
 							if(type != 0) 
-								l.add(new Live(i.getVideoName(), i.getVideoId(), type, msId)); //if it is a live add a live to the list
-									else FileO.writer(FileO.toHtml(i.getVideoName()) + "@" + i.getVideoId() + "@" + msId, "last.ini");
+								l.add(new Live(i.getVideoName(), i.getVideoId(), mText, type, msId)); //if it is a live add a live to the list
+									else FileO.writer(FileO.toHtml(i.getVideoName()) + "@" + i.getVideoId() + "@" + msIdConverter(msId) + "@" + mText, "last.ini");
 							
 							LOGGER.fine("Phrase used: " + mText);
 						}
@@ -124,49 +120,31 @@ public class Main {
 						
 						//check live status
 						LOGGER.finer("Checking: " + l.get(liveIndex).toString());
-						int status = convertType(i.getVideoType(l.get(liveIndex).getId(), st)), msId = l.get(liveIndex).getMessageId();
-						String mText = "", id = l.get(liveIndex).getId(), title = l.get(liveIndex).getTitle();
-						
-						if(FileO.exist("programmed.ini")) {
-							mText = FileO.reader("programmed.ini");
-							FileO.delater("programmed.ini");
-						}
+						int status = convertType(i.getVideoType(l.get(liveIndex).getId(), st));
+						int[] msId = l.get(liveIndex).getMessageId();
+						String id = l.get(liveIndex).getId(), title = l.get(liveIndex).getTitle();
 						
 						if(status == 1 && l.get(liveIndex).getType() == 2){
 							//live changed his status from upcoming to live
-							mText = f.getSinglePhrases(1, st, t);
 							LOGGER.info("Changed from upcoming to live: " + l.get(liveIndex).toString());
-							LOGGER.fine("Phrase used: " + mText);
 							l.get(liveIndex).setType(status);
-							bot.execute(new EditMessageText(st.getChatId(), msId, mText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML));
-							if(st.getIfNotificationOnUpcoming()) sendLiveNotification(bot, f, l.get(liveIndex).getTitle(), 4, t);
+							if(!st.getMantainPhrase()) sendUpcomingToLiveMessage(f.getSinglePhrases(1, st, t), l.get(liveIndex), bot, msId, id , title, st.getChats());
+							sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(4, st, t), 0, true);
 							
 						} else if(status == 1) {
 							//live still online
 							l.get(liveIndex).setLiveOffline(System.currentTimeMillis());
-							if(st.getIfRepeat()) {
-								
-								if(System.currentTimeMillis() - l.get(liveIndex).getNotificationCycle() > st.getRepeatDelay()){
-									sendLiveNotification(bot, f, l.get(liveIndex).getTitle(), 4, t);
-									l.get(liveIndex).setNotificationCycle(System.currentTimeMillis());
-								}
-								
+							if(System.currentTimeMillis() - l.get(liveIndex).getNotificationCycle() > st.getRepeatDelay()){
+								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(4, st, t), 1, true);
+								l.get(liveIndex).setNotificationCycle(System.currentTimeMillis());
 							}
 						} else if(status == 0){
 							//live offline
 							if(System.currentTimeMillis() - l.get(liveIndex).getLiveOffline() > st.getOfflineDelay()) {
 								//live dead
 								LOGGER.info("Live stopped: " + l.get(liveIndex).toString());
-								
-								if(st.getLessSpamMethod().equalsIgnoreCase("COMPRESS")){
-									mText = f.getSinglePhrases(3, st, t);
-									LOGGER.fine("Phrase used: " + mText);
-									bot.execute(new EditMessageText(st.getChatId(), msId, mText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML).disableWebPagePreview(true));
-								} else if(st.getLessSpamMethod().equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(st.getChatId(), msId));
-								
-								if(st.getIfNotificationOnStop())
-									sendLiveNotification(bot, f, l.get(liveIndex).getTitle(), 5, t);
-							
+								if(!st.getMantainPhrase()) sendLiveToStopMessage(st.getChats(), bot, msId, id, title, l.get(liveIndex).getMText(), f.getSinglePhrases(3, st, t));
+								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(5, st, t), 2, true);
 								l.remove(liveIndex);
 							}
 						} //live still upcoming
@@ -179,42 +157,32 @@ public class Main {
 				
 				if(st.getIfTwitch()){
 					//twitch
-					LOGGER.finer("Chiecking twitch... ");
+					LOGGER.finer("Checking twitch... ");
 					switch(t.checkLive(st)){
 						case 3: {
 							//gone online
 							String mText = f.getSinglePhrases(6, st, t);
 							LOGGER.info("Twitch stream is now online!");
-							LOGGER.fine("Phrase used: " + mText);
 							
-							SendResponse sr = bot.execute(new SendMessage(st.getChatId(), mText + "\n" + st.getTwitchClickableTitle(t.getTitle())).parseMode(ParseMode.HTML));
-							t.setMessageId(sr.message().messageId());
+							t.setMessageId(sendTwitchMessage(bot, st.getChats(), mText, st.getTwitchClickableTitle(t.getTitle())));
+							t.setMText(mText);
+							pinMessage(bot, st.getChats(), t.getMessageId(), false);
 							//if(st.getIfNotificationOnUpcoming()) sendLiveNotification(bot, f, t.getTitle(), 6, t);
 							break;
 						}
 						case 2: {
 							//online
-							if(st.getIfRepeat()) {
-								if(System.currentTimeMillis() - t.getNotificationCycle() > st.getRepeatDelay()){
-									sendLiveNotification(bot, f, t.getTitle(), 6, t);
+							if(System.currentTimeMillis() - t.getNotificationCycle() > st.getRepeatDelay()){
+									sendLiveNotification(bot, t.getTitle(), st.getChats(), f.getSinglePhrases(6, st, t), 1, false);
 									t.setNotificationCycle(System.currentTimeMillis());
-								}
 							}
 							break;
 						}
 						case 1: {
 							//gone offline
-
 							LOGGER.info("Twitch stream is now offline");
-
-							if(st.getLessSpamMethod().equalsIgnoreCase("COMPRESS")){
-								String mText = f.getSinglePhrases(7, st, t);
-								LOGGER.fine("Phrase used: " + mText);
-								bot.execute(new EditMessageText(st.getChatId(), t.getMessageId(), mText + "\n" + st.getTwitchClickableTitle(t.getTitle())).parseMode(ParseMode.HTML).disableWebPagePreview(true));
-							} else if(st.getLessSpamMethod().equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(st.getChatId(), t.getMessageId()));
-
-							if(st.getIfNotificationOnStop())
-								sendLiveNotification(bot, f, t.getTitle(), 7, t);
+							sendTwitchOfflineMessage(st.getChats(), bot, t, f.getSinglePhrases(7, st, t));
+							sendLiveNotification(bot, t.getTitle(), st.getChats(), f.getSinglePhrases(7, st, t), 2, false);
 							break;
 						}
 					}
@@ -222,6 +190,7 @@ public class Main {
 				
 				//telegram
 				
+		    	LOGGER.finest("Checking Telegram...");
 				GetUpdatesResponse updatesResponse = bot.execute(new GetUpdates().offset(offset));
     			List<Update> updates = updatesResponse.updates();
     			for(Update update : updates) {
@@ -245,16 +214,18 @@ public class Main {
     								case 0: break;
     								
     								case 1: { //force
-    									switch(sp[2]){
+    									if(sp.length > 2) switch(sp[2]){
     									
     										case"reboot": {
     											LOGGER.warning("Forced reboot from ad admin");
+    											bot.execute(new GetUpdates().offset(offset));
     											return;
     										}
-    										case"vUpdate":{yt.forceVideoUpdate(true); break;}
+    										case"vUpdate": {yt.forceVideoUpdate(true); break;}
+    										case"noUpdate":{yt.forceNoUpdate(Boolean.parseBoolean(sp[3])); break;}
     										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
     										
-    									}
+    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
     									break;
     								}
     								case 2: { //reload
@@ -262,7 +233,7 @@ public class Main {
     									switch(sp[2]){
     									
     										case"Settings": {st.loadSettings(startTime); break;}
-    										case"Phrases": 	{f.initialize(); break;}
+    										case"Phrases": 	{st.setPhraseStatus(f.initialize()); break;}
     										case"Commands": {c = initializeCmds(); break;}
     										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
     										
@@ -277,7 +248,7 @@ public class Main {
 											all = all.substring(0, all.length() - 1);
 										}catch(Exception e){}
 										
-    									switch(sp[2]){
+    									if(sp.length > 3) switch(sp[2]){
     										
     										case"newFile": {FileO.newFile(sp[3]); break;}
     										case"newPath": {FileO.newPath(sp[3]); break;}
@@ -290,7 +261,7 @@ public class Main {
     										case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3])).parseMode(ParseMode.HTML)); break;}
     										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
     									
-    									}
+    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
     									break;
     								}
     								case 4: {//program
@@ -319,7 +290,7 @@ public class Main {
 											all = all.substring(0, all.length() - 1);
 										}catch(Exception e){}
 										
-    									switch(sp[2]){
+										if(sp.length > 2) switch(sp[2]){
     										case"to": {
     											bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.toHtml(all)));
     											break;
@@ -333,7 +304,7 @@ public class Main {
     											break;
     										}
     										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
-    									}
+    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
     									
     								}
     							}
@@ -393,24 +364,93 @@ public class Main {
 		return strDate;	
 	}
 	
-	public static void sendLiveNotification(TelegramBot bot, Phrase f, String title, int type, Twitch t){
-		String nText = f.getSinglePhrases(type, st, t);
-		LOGGER.info("Sending live notification (" + type + ") with phrase: " + nText);
+	public static void lessSpam(TelegramBot bot, ArrayList<Chats> c) throws IOException{
 		
-		SendResponse sr = bot.execute(new SendMessage(st.getChatId(), nText + "\n" + title));
-		wait(1500);
-		bot.execute(new DeleteMessage(st.getChatId(), sr.message().messageId()));
+		String oldMessageData[] = FileO.reader("last.ini").split("@"); //edit previous message for less spam in chat
+		String[] msgIds = oldMessageData[2].split("-");
+		for(int i = 0; i < c.size(); i++){
+			String option = c.get(i).getLessSpamMethod();
+			if(!option.equalsIgnoreCase("none")) {
+		
+				if(option.equalsIgnoreCase("COMPRESS")) bot.execute(new EditMessageText(c.get(i).getChatId(), Integer.parseInt(msgIds[i]),
+						convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+		
+				else if(option.equalsIgnoreCase("NOWEBPREVIEW")) bot.execute(new EditMessageText(c.get(i).getChatId(), Integer.parseInt(msgIds[i]), 
+						oldMessageData[3] + "\n" + convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+		
+				else if(option.equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(c.get(i).getChatId(), Integer.parseInt(msgIds[i])));
+			}
+		}
 	}
 	
-	public static void lessSpam(TelegramBot bot) throws IOException{
-		String option = st.getLessSpamMethod();
-		if(!option.equalsIgnoreCase("none")) {
-		String oldMessageData[] = FileO.reader("last.ini").split("@"); //edit previous message for less spam in chat
-		
-		if(option.equalsIgnoreCase("COMPRESS"))
-				bot.execute(new EditMessageText(st.getChatId(), Integer.parseInt(oldMessageData[2]),
-						convertToLink(oldMessageData[1], oldMessageData[0])).parseMode(ParseMode.HTML).disableWebPagePreview(true));
-			else if(option.equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(st.getChatId(), Integer.parseInt(oldMessageData[2])));
+
+	public static void sendLiveNotification(TelegramBot bot, String title,  ArrayList<Chats> c, String s, int nType, boolean ytOrTw){
+		Main.LOGGER.info("Sending live notification (" + nType + ") with phrase: " + s);
+		for(Chats ch : c)
+			if(checkNotificationSettings(ch, nType) && checkYtOrTwitchEnabled(ch, ytOrTw)) new Thread(new LiveNotification(bot, s, title, ch.getChatId())).start();
+	}
+	public static boolean checkNotificationSettings(Chats c, int type){
+		switch(type){
+			case 0: return c.getIfNotificationOnUpcoming();
+			case 1: return c.getIfRepeat();
+			case 2: return c.getIfNotificationOnStop();
 		}
+		return false;
+	}
+	public static boolean checkYtOrTwitchEnabled(Chats c, boolean b){
+		return (b && c.getIfYoutube()) || (!b && c.getIfTwitch());
+		//if(b) return c.getIfYoutube();
+		//return c.getIfTwitch();
+	}
+	public static void sendTwitchOfflineMessage(ArrayList<Chats> c, TelegramBot bot, Twitch t, String mText){
+		LOGGER.fine("Phrase used: " + mText);
+		for(int i = 0; i < c.size(); i++){
+			if(c.get(i).getIfTwitch())
+				if(c.get(i).getLessSpamMethod().equalsIgnoreCase("COMPRESS")) bot.execute(new EditMessageText(c.get(i).getChatId(), t.getMessageId()[i], mText + "\n" + st.getTwitchClickableTitle(t.getTitle())).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(c.get(i).getChatId(), t.getMessageId()[i]));
+				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("NOWEBPREVIEW")) bot.execute(new EditMessageText(c.get(i).getChatId(), t.getMessageId()[i], t.getMText() + "\n" + st.getTwitchClickableTitle(t.getTitle())).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+		}
+	}
+	public static void sendLiveToStopMessage(ArrayList<Chats> c, TelegramBot bot, int[] msId, String id, String title, String oldMText, String newMText) throws IOException{
+		LOGGER.fine("Phrase used: " + newMText);
+		for(int i = 0; i < msId.length; i++)
+			if(c.get(i).getIfYoutube())
+				if(c.get(i).getLessSpamMethod().equalsIgnoreCase("COMPRESS")) bot.execute(new EditMessageText(c.get(i).getChatId(), msId[i], newMText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(c.get(i).getChatId(), msId[i]));
+				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("NOWEBPREVIEW"))  bot.execute(new EditMessageText(c.get(i).getChatId(), msId[i], oldMText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML).disableWebPagePreview(true));
+	}
+	public static void sendUpcomingToLiveMessage(String mText, Live l, TelegramBot bot, int[] msId, String id, String title, ArrayList<Chats> c) throws IOException{
+		LOGGER.fine("Phrase used: " + mText);
+		for(int i = 0; i < msId.length; i++)
+			if(c.get(i).getIfYoutube())
+				bot.execute(new EditMessageText(c.get(i).getChatId(), msId[i], mText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML));
+	}
+	public static void pinMessage(TelegramBot bot, ArrayList<Chats> c, int[] messageId, boolean twOrYt){
+		for(int i = 0; i < messageId.length; i++)
+			if(c.get(i).getIfPin() && checkYtOrTwitchEnabled(c.get(i), twOrYt))
+				bot.execute(new PinChatMessage(c.get(i).getChatId(), messageId[i]).disableNotification(c.get(i).getPinNotification()));
+	}
+	public static int[] sendTwitchMessage(TelegramBot bot, ArrayList<Chats> c, String mText, String link){
+		int[] msgIds = new int[c.size()];
+		LOGGER.fine("Phrase used: " + mText);
+		for(int i = 0; i < msgIds.length; i++)
+			if(c.get(i).getIfTwitch())
+				msgIds[i] = bot.execute(new SendMessage(c.get(i).getChatId(), mText + "\n" + link).parseMode(ParseMode.HTML)).message().messageId();
+			else msgIds[i] = 0;
+		return msgIds;
+	}
+	public static int[] sendYoutubeMessage(TelegramBot bot, ArrayList<Chats> c, String mText, Info i){
+		int[] msgIds = new int[c.size()];
+		for(int n = 0; n < msgIds.length; n++) 
+			if(c.get(n).getIfYoutube())
+				msgIds[n] = bot.execute(new SendMessage(c.get(n).getChatId(), mText + "\n" + //send message
+				convertToLink(i.getVideoId(), FileO.toHtml(i.getVideoName()))).parseMode(ParseMode.HTML)).message().messageId();
+			else msgIds[n] = 0;
+		return msgIds;
+	}
+	public static String msIdConverter(int[] msid){
+		String ret = "";
+		for(int i : msid) ret += i + "-";
+		return ret.substring(0, ret.length() - 1);
 	}
 }

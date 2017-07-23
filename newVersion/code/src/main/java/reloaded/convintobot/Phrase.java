@@ -1,5 +1,6 @@
 package reloaded.convintobot;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -18,12 +19,22 @@ public class Phrase {
 	
 	public boolean[] initialize(){
 		//System.out.println(!FileO.exist("phrases.json"));
+		videoPhrase.clear();
+		livePhrase.clear();
+		upcomingPhrase.clear();
+		terminedPhrase.clear();
+		upcomingToLivePhrase.clear();
+		liveToNonePhrase.clear();
+		twitchOnPhrase.clear();
+		twitchOffPhrase.clear();
+		
 		boolean ret[] = new boolean[8];
 		for(int i = 0; i < ret.length; i++) ret[i] = false;
 		
 		if(!FileO.exist("phrases.json")){
-			Main.LOGGER.severe("\"phrases.json\" not foud. If you wanna use your own phrases create this file in the same directory of the .jar and write in it in this method:\n"
-					+ "{\n "
+			Main.LOGGER.severe("\"phrases.json\" not foud. If you wanna use your own phrases create this file in the same directory of the .jar and write in it in this method:");
+			System.out.println(
+					  "{\n "
 					+ "   \"video\" : [\n"
 					+ "        \"phrase for new youtube video 1\",\n"
 					+ "        \"phrase for new youtube video 2\",\n"
@@ -148,7 +159,12 @@ public class Phrase {
 		}
 		return null;
 	}
-	public String getSinglePhrases(int type, Settings s, Twitch t){
+	public String getSinglePhrases(int type, Settings s, Twitch t) throws IOException{
+		if(FileO.exist("programmed.ini")) {
+			String prg = FileO.reader("programmed.ini");
+			FileO.delater("programmed.ini");
+			return prg.replaceAll("%game%", FileO.toHtml(t.getGame()));
+		}
 		if(!s.getPhraseStatus(type)) {
 			switch(type){
 				case 0:	return "Nuovo video:";
