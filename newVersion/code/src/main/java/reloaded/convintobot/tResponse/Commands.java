@@ -129,11 +129,11 @@ public class Commands {
 	private String twitch(Twitch t, Settings st, Phrase f) throws IOException{
 		int i = 7;
 		if(t.getIfInLive()) i--;
-		return f.getSinglePhrases(i, st, t) + "\n" + st.getTwitchClickableTitle(t.getTitle());
+		return f.getSinglePhrases(i, st, t, false) + "\n" + st.getTwitchClickableTitle(t.getTitle());
 	}
 	
 	private String last(Info i, Phrase f, Settings st, Twitch t) throws IOException{
-		return f.getSinglePhrases(Main.convertType(i.getVideoId()), st, t) + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
+		return f.getSinglePhrases(Main.convertType(i.getVideoId()), st, t, false) + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
 	}
 	
 	private ArrayList<Inline> getArrayList(JSONArray il){

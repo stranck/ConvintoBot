@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 public class Settings {
 	private long startTime, liveOfflineDelay, repeatDelay = Long.MAX_VALUE;
-	private boolean youtube, twitch, mantainPhrase, useBotName = false;
+	private boolean youtube, ytLive, ytVideo, twitch, mantainPhrase, useBotName = false;
 	private String gToken, tToken, wToken, yId, tId, botName, user, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
 	private ArrayList<Chats> chats = new ArrayList<Chats>();
@@ -33,6 +33,8 @@ public class Settings {
 				FileO.addWrite("config.json", "        \"enable\" : true / false,");
 				FileO.addWrite("config.json", "        \"gToken\" : \"INSERIT YOUR GOOGLE APIS TOKEN HERE\",");
 				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\",");
+				FileO.addWrite("config.json", "        \"enableVideo\" : true / false,");
+				FileO.addWrite("config.json", "        \"enableLive\" : true / false");
 				FileO.addWrite("config.json", "    },");
 				FileO.addWrite("config.json", "    \"twitch\" : {");
 				FileO.addWrite("config.json", "        \"enable\" : true / false,");
@@ -75,6 +77,8 @@ public class Settings {
 				youtube = true;
 				gToken = ytObj.getString("gToken");
 				yId = ytObj.getString("id");
+				ytVideo = ytObj.getBoolean("enableVideo");
+				ytLive = ytObj.getBoolean("enableLive");
 			}
 			JSONObject twObj = config.getJSONObject("twitch"); 
 			if(twObj.getBoolean("enable")){
@@ -169,6 +173,12 @@ public class Settings {
 	}
 	public boolean getMantainPhrase(){
 		return mantainPhrase;
+	}
+	public boolean getIfYoutubeVideo(){
+		return ytVideo;
+	}
+	public boolean getIfYoutubeLive(){
+		return ytLive;
 	}
 	public long getOfflineDelay(){
 		return liveOfflineDelay;

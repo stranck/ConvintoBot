@@ -31,7 +31,7 @@ public class Main {
 	
 	
 	public static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-	public static final String version = "official2.3.07232017"; //MMddYYYY
+	public static final String version = "official2.3.08092017"; //MMddYYYY
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
 	
@@ -58,7 +58,7 @@ public class Main {
 		ArrayList<Live> l = new ArrayList<Live>();
 		
 		byte checkUpdate = 0x01, maxCheckUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
-		boolean switchLiveVideo = true;
+		boolean switchLiveVideo = true, logAllUserInfo = false;
 		int liveIndex = 0, offset = 0, millsDelay = 500;
 		
 		if(!st.loadSettings(startTime)) {
@@ -79,6 +79,7 @@ public class Main {
         		case"-d": {st.removeDirectory(); break;}
         		case"-dg":{maxCheckUpdate = Byte.valueOf(args[++n]); break;}
         		case"-dt":{millsDelay = Integer.parseInt(args[++n]); break;}
+        		case"-au":{logAllUserInfo = true; break;}
         	}
     	}
         	
@@ -103,16 +104,18 @@ public class Main {
 							LOGGER.info("New update found! " + i.toString());
 							lessSpam(bot, st.getChats());
 							int type = convertType(i.getVideoType()); //stuff & get if any phrase is programmed
-							String mText = f.getSinglePhrases(type, st, t);
+							String mText = f.getSinglePhrases(type, st, t, true);
 							
-							int msId[] = sendYoutubeMessage(bot, st.getChats(), mText, i);
-							pinMessage(bot, st.getChats(), msId, true);
+							if(checkYtLiveOrVideoEnabled(st, type)) {
+								int msId[] = sendYoutubeMessage(bot, st.getChats(), mText, i);
+								pinMessage(bot, st.getChats(), msId, true);
 							
-							if(type != 0) 
-								l.add(new Live(i.getVideoName(), i.getVideoId(), mText, type, msId)); //if it is a live add a live to the list
-									else FileO.writer(FileO.toHtml(i.getVideoName()) + "@" + i.getVideoId() + "@" + msIdConverter(msId) + "@" + mText, "last.ini");
+								if(type != 0) 
+									l.add(new Live(i.getVideoName(), i.getVideoId(), mText, type, msId)); //if it is a live add a live to the list
+										else FileO.writer(FileO.toHtml(i.getVideoName()) + "@" + i.getVideoId() + "@" + msIdConverter(msId) + "@" + mText, "last.ini");
 							
-							LOGGER.fine("Phrase used: " + mText);
+								LOGGER.fine("Phrase used: " + mText);
+							}
 						}
 						if(l.size() > 0) switchLiveVideo = false;
 						
@@ -128,14 +131,15 @@ public class Main {
 							//live changed his status from upcoming to live
 							LOGGER.info("Changed from upcoming to live: " + l.get(liveIndex).toString());
 							l.get(liveIndex).setType(status);
-							if(!st.getMantainPhrase()) sendUpcomingToLiveMessage(f.getSinglePhrases(1, st, t), l.get(liveIndex), bot, msId, id , title, st.getChats());
-							sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(4, st, t), 0, true);
+							String text = f.getSinglePhrases(1, st, t, true);
+							if(!st.getMantainPhrase()) sendUpcomingToLiveMessage(text, l.get(liveIndex), bot, msId, id , title, st.getChats());
+							sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), text, 0, true);
 							
 						} else if(status == 1) {
 							//live still online
 							l.get(liveIndex).setLiveOffline(System.currentTimeMillis());
 							if(System.currentTimeMillis() - l.get(liveIndex).getNotificationCycle() > st.getRepeatDelay()){
-								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(4, st, t), 1, true);
+								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(4, st, t, false), 1, true);
 								l.get(liveIndex).setNotificationCycle(System.currentTimeMillis());
 							}
 						} else if(status == 0){
@@ -143,8 +147,8 @@ public class Main {
 							if(System.currentTimeMillis() - l.get(liveIndex).getLiveOffline() > st.getOfflineDelay()) {
 								//live dead
 								LOGGER.info("Live stopped: " + l.get(liveIndex).toString());
-								if(!st.getMantainPhrase()) sendLiveToStopMessage(st.getChats(), bot, msId, id, title, l.get(liveIndex).getMText(), f.getSinglePhrases(3, st, t));
-								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(5, st, t), 2, true);
+								if(!st.getMantainPhrase()) sendLiveToStopMessage(st.getChats(), bot, msId, id, title, l.get(liveIndex).getMText(), f.getSinglePhrases(3, st, t, true));
+								sendLiveNotification(bot, l.get(liveIndex).getTitle(), st.getChats(), f.getSinglePhrases(5, st, t, true), 2, true);
 								l.remove(liveIndex);
 							}
 						} //live still upcoming
@@ -161,7 +165,7 @@ public class Main {
 					switch(t.checkLive(st)){
 						case 3: {
 							//gone online
-							String mText = f.getSinglePhrases(6, st, t);
+							String mText = f.getSinglePhrases(6, st, t, true);
 							LOGGER.info("Twitch stream is now online!");
 							
 							t.setMessageId(sendTwitchMessage(bot, st.getChats(), mText, st.getTwitchClickableTitle(t.getTitle())));
@@ -173,7 +177,7 @@ public class Main {
 						case 2: {
 							//online
 							if(System.currentTimeMillis() - t.getNotificationCycle() > st.getRepeatDelay()){
-									sendLiveNotification(bot, t.getTitle(), st.getChats(), f.getSinglePhrases(6, st, t), 1, false);
+									sendLiveNotification(bot, t.getTitle(), st.getChats(), f.getSinglePhrases(6, st, t, false), 1, false);
 									t.setNotificationCycle(System.currentTimeMillis());
 							}
 							break;
@@ -181,8 +185,9 @@ public class Main {
 						case 1: {
 							//gone offline
 							LOGGER.info("Twitch stream is now offline");
-							sendTwitchOfflineMessage(st.getChats(), bot, t, f.getSinglePhrases(7, st, t));
-							sendLiveNotification(bot, t.getTitle(), st.getChats(), f.getSinglePhrases(7, st, t), 2, false);
+							String text = f.getSinglePhrases(7, st, t, true);
+							sendTwitchOfflineMessage(st.getChats(), bot, t, text);
+							sendLiveNotification(bot, t.getTitle(), st.getChats(), text, 2, false);
 							break;
 						}
 					}
@@ -199,7 +204,12 @@ public class Main {
     				String text = null;
     				try{
     					text = update.message().text();
-    					LOGGER.info("[" + update.message().chat().id() + "] " + text);
+    					String log = update.message().chat().id().toString();
+    					if(logAllUserInfo) {
+    						System.out.println("TEST");
+    						log = update.message().toString();
+    					}
+    					LOGGER.info("[" + log + "] " + text);
     				}catch(Exception e) {}
     				
     				for(Commands cmd : c){
@@ -396,6 +406,9 @@ public class Main {
 			case 2: return c.getIfNotificationOnStop();
 		}
 		return false;
+	}
+	public static boolean checkYtLiveOrVideoEnabled(Settings s, int type){
+		return (type == 0 && s.getIfYoutubeVideo()) || (type > 0 && s.getIfYoutubeLive());
 	}
 	public static boolean checkYtOrTwitchEnabled(Chats c, boolean b){
 		return (b && c.getIfYoutube()) || (!b && c.getIfTwitch());

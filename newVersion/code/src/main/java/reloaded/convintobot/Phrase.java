@@ -159,8 +159,8 @@ public class Phrase {
 		}
 		return null;
 	}
-	public String getSinglePhrases(int type, Settings s, Twitch t) throws IOException{
-		if(FileO.exist("programmed.ini")) {
+	public String getSinglePhrases(int type, Settings s, Twitch t, boolean enableProgrammed) throws IOException{
+		if(enableProgrammed && FileO.exist("programmed.ini")) {
 			String prg = FileO.reader("programmed.ini");
 			FileO.delater("programmed.ini");
 			return prg.replaceAll("%game%", FileO.toHtml(t.getGame()));
