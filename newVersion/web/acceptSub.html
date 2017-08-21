@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+	<head>
+  		<title>Please wait</title>
+	</head>
+	<body>
+    	<p>Please wait</p>
+        <p><a id = "stuck"></a></p>
+		<script>
+			window.opener.redirect(window.location);
+            setTimeout( function(){
+            	document.getElementById("stuck").innerHTML = "If you're stuck here, please retry from a different browser";
+            }, 5000);
+  		</script>
+	</body>
+</html>

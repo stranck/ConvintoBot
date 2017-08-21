@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!Thanks to Valerio Bellic for the site idea and helping me in the front-end process>
+<html>
+	<head>
+  		<title>Please login</title>
+        <style type="text/css">
+        	@font-face {
+    			font-family: 'BerlinSans';
+    			src: url('BerlinSansFB.ttf');
+			}
+            .txt {
+            	color: #ffffff;
+                font-family: BerlinSans;
+                font-size: 8vh;
+            }
+        	.btn {
+  				-webkit-border-radius: 28;
+  				-moz-border-radius: 28;
+  				border-radius: 4vh;
+  				font-family: Arial;
+  				color: #ffffff;
+ 				background: #34d981;
+  				padding: 1vh 4vh 1vh 4vh;
+  				text-decoration: none;
+  				font-size: 5vh;
+			}
+			.btn:hover {
+  				background: #3cb0fd;
+  				background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+  				background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+  				background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+  				background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+  				background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+  				text-decoration: none;
+  				font-size: 5vh;
+                cursor:pointer;
+			}
+ 		</style>
+	</head>
+	<body background = "scelto.jpg">
+    	<center>
+			<p>
+				<img src = "logo.png" style = "width: auto; height: 30vh;">
+			</p>
+
+			<p>
+            	<a class = "txt" id = "text"> Click the button and login on Twitch </a>
+				<!img src = "text.png" style = "width: auto; height: 10vh;">
+			</p>
+            <p> &nbsp; </p>
+			<p>
+				<a id ="button" onclick="openWindow()" class = "btn">
+                		Login
+                    	<!img src = "button.png" style = "width:540px; height: auto;" >
+				</a>
+			</p>
+		</center>
+		<script>
+        	var url = window.location, login, s;
+            //alert(url);
+            
+            function redirect(uri) {
+            	document.title = "Redirecting to telegram...";
+                document.getElementById("text").innerHTML = "You will be redirected to telegram in a while";
+                document.getElementById("button").innerHTML = "Please wait";
+                login.close();
+                s = "https://t.me/" + getParameterByName("bot_user", url) + "?start=-" + getParameterByName("access_token", uri);
+                url.replace(s);
+                //url.replace("tg://resolve/?domain=" + getParameterByName("bot_user", url, false)
+                //	+ "&start=" + getParameterByName("access_token", uri, true));
+            }
+            
+            function openWindow() {
+            	if(!s) login = window.open(
+                			"https://api.twitch.tv/kraken/oauth2/authorize" +
+                    		"?client_id=" + getParameterByName("token", url) +
+                    		"&redirect_uri=http://stranckutilies.altervista.org/acceptSub.html" +
+                    		"&response_type=token&scope=user_subscriptions user_read",
+                    	'Login on twitch','resizable=1,width=500,height=570');
+                else url.replace(s);
+            }
+            
+            function getParameterByName(name, url) {
+   				if (!url) url = window.location.href;
+   				name = name.replace(/[\[\]]/g, "\\$&");
+    			var regex = new RegExp("[#&]" + name + "(=([^&#]*)|&|#|$)");
+        		var results = regex.exec(url);
+    			if (!results) return null;
+    			if (!results[2]) return '';
+    			return decodeURIComponent(results[2].replace(/\+/g, " "));
+			}
+  		</script>
+	</body>
+</html>
