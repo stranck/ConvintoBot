@@ -1,0 +1,58 @@
+{
+    "commandType" : 4,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : true,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"Stato attuale: <b>%sub%</b>\n\nUsa il pulsante qui sotto per collegare il tuo account twitch e aggiornare il tuo abbonamento.\nA fine procedura, se sei abbonato, potrai entrare nel gruppo ufficiale di %twitchUser%!",
+			"Non sei registrato al bot!\n<b>Hai 24 ore di tempo per collegare il tuo account twitch prima di essere kickato dal gruppo.</b>\nSe sei abbonato, clicca il pulsante sotto e completa la procedura per poter riaver accesso al gruppo.",
+			"<b>Sei stato kickato dal gruppo poiché il tuo abbonamento è scaduto</b>\nSe vuoi rientrare, non esitare a subbarti di nuovo!\n\nUna volta che hai fatto, usa il pulsante qui sotto per aggiornare i tuoi dati",
+			"Il tuo abbonamento è scaduto. Se non lo rinnoverai, verrai presto kickato dal gruppo!\n\nUna volta che hai fatto, usa il pulsante qui sotto per aggiornare i tuoi dati",
+			"Il tuo abbonamento sta per scadere! Rinnovalo, se vuoi rimanere nel gruppo!\n\nUna volta che hai fatto, usa il pulsante qui sotto per aggiornare i tuoi dati"
+		],
+		"args" : {
+			"new" : 1,
+			"kicked" : 2,
+			"expired" : 3,
+			"notify" : 4
+		},
+		"inline" : [
+			[
+				{
+					"type" : 0,
+					"text" : "Collega!",
+					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+				}
+			],
+			[
+				{
+					"type" : 0,
+					"text" : "Collega!",
+					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+				}
+			],
+			[
+				{
+					"type" : 0,
+					"text" : "Collega!",
+					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+				}
+			],
+			[
+				{
+					"type" : 0,
+					"text" : "Collega!",
+					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+				}
+			],
+			[
+				{
+					"type" : 0,
+					"text" : "Collega!",
+					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+				}
+			]
+		]
+	}
+}

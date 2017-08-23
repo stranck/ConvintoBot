@@ -2,8 +2,12 @@ package reloaded.convintobot;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.ConnectException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
@@ -12,15 +16,22 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.TelegramBotAdapter;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.DeleteMessage;
 import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.GetMe;
 import com.pengrad.telegrambot.request.GetUpdates;
+import com.pengrad.telegrambot.request.KickChatMember;
 import com.pengrad.telegrambot.request.PinChatMessage;
+import com.pengrad.telegrambot.request.RestrictChatMember;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.GetUpdatesResponse;
 
@@ -31,7 +42,7 @@ public class Main {
 	
 	
 	public static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-	public static final String version = "official2.3.08092017"; //MMddYYYY
+	public static final String version = "official2.3.08222017"; //MMddYYYY
 	public static Settings st = new Settings();
 	public static ExceptionAlert ea;
 	
@@ -56,6 +67,7 @@ public class Main {
 		Phrase f = new Phrase();
 		Info i = new Info();
 		ArrayList<Live> l = new ArrayList<Live>();
+		ArrayList<GroupUser> gus = null;
 		
 		byte checkUpdate = 0x01, maxCheckUpdate = 0x11;//, switchLiveVideo; //0 = none, 1 = videoLive, 2 = videoUpcoming, 3 = live, 4 = upcoming
 		boolean switchLiveVideo = true, logAllUserInfo = false;
@@ -66,6 +78,7 @@ public class Main {
 			return;
 		}
 		ArrayList<Commands> c = initializeCmds();
+		if(st.getIfManageGroup()) gus = initializeGroupUser();
 		TelegramBot bot = TelegramBotAdapter.build(st.getTelegramToken());
 		Twitch t = new Twitch(st);
 		ea = new ExceptionAlert(bot, c, f);
@@ -193,6 +206,30 @@ public class Main {
 					}
 				}
 				
+				if(st.getIfManageGroup()){
+					//manage group
+					for(int n = 0; n < gus.size(); n++){
+						if(gus.get(n).checkIfTimedOut(st)){
+							LOGGER.info(gus.get(n).getId() + ": Kicking from the group");
+							getCommand("/sub", c, st).commandExecute("/sub kicked", bot, gus.get(n).getId(), st, i, t, f, false);
+							bot.execute(new KickChatMember(st.getManageGroupId(), gus.get(n).getNumericId()));
+							gus.get(n).delete();
+							gus.remove(n);
+						} else if(gus.get(n).checkIfExpired()){
+							LOGGER.info(gus.get(n).getId() + ": Sub expired");
+							getCommand("/sub", c, st).commandExecute("/sub expired", bot, gus.get(n).getId(), st, i, t, f, false);
+							gus.get(n).setIfExpiredIsNotified(true);
+							gus.get(n).setIfAlreadyNotified(true);
+							gus.get(n).save();
+						} else if(gus.get(n).checkIfNotify(st)){
+							LOGGER.info(gus.get(n).getId() + ": Notifying for imminent sub expire");
+							getCommand("/sub", c, st).commandExecute("/sub notify", bot, gus.get(n).getId(), st, i, t, f, false);
+							gus.get(n).setIfAlreadyNotified(true);
+							gus.get(n).save();
+						}
+					}
+				}
+				
 				//telegram
 				
 		    	LOGGER.finest("Checking Telegram...");
@@ -210,115 +247,160 @@ public class Main {
     						log = update.message().toString();
     					}
     					LOGGER.info("[" + log + "] " + text);
+    					
+        				if(st.getIfManageGroup() && update.message().chat().id().toString().equals(st.getManageGroupId()) && !FileO.exist("sub" + File.separator + update.message().from().id())){	
+        					LOGGER.info(update.message().from().id() + ": New unregistred user");
+        					gus.add(new GroupUser(update.message().from().id().toString(), System.currentTimeMillis()));
+        					gus.get(gus.size() - 1).setIfAlreadyNotified(true);
+        					gus.get(gus.size() - 1).setIfExpiredIsNotified(true);
+        					gus.get(gus.size() - 1).save();
+        					bot.execute(new RestrictChatMember(st.getManageGroupId(), update.message().from().id()).canSendMessages(!st.getIfMuteUntilLogin()));
+        					getCommand("/sub", c, st).commandExecute("/sub new", bot, gus.get(gus.size() - 1).getId(), st, i, t, f, false);
+        				}
+    					
     				}catch(Exception e) {}
     				
     				for(Commands cmd : c){
-    					if(text != null && cmd.isThisCommand(text, st.getUser())){
+    					if(text != null && cmd.isThisCommand(text, st.getUser(), st)){
     						boolean admin = st.getAdmins().contains(update.message().from().id().toString());
-    						int response = cmd.commandExecute(text, bot, update, st, i, t, f, admin);
-    						
-    						if(admin){
-    							String[] sp = text.split("\\s+");
+    						int response = cmd.commandExecute(text, bot, update.message().chat().id().toString(), st, i, t, f, admin);
+    						String[] sp = text.split("\\s+");
     							
-    							switch(response){
-    								case 0: break;
+    						switch(response){
+    							case 0: break;
     								
-    								case 1: { //force
-    									if(sp.length > 2) switch(sp[2]){
-    									
-    										case"reboot": {
-    											LOGGER.warning("Forced reboot from ad admin");
-    											bot.execute(new GetUpdates().offset(offset));
-    											return;
-    										}
-    										case"vUpdate": {yt.forceVideoUpdate(true); break;}
-    										case"noUpdate":{yt.forceNoUpdate(Boolean.parseBoolean(sp[3])); break;}
-    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
-    										
-    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
-    									break;
-    								}
-    								case 2: { //reload
-    									
-    									switch(sp[2]){
-    									
-    										case"Settings": {st.loadSettings(startTime); break;}
-    										case"Phrases": 	{st.setPhraseStatus(f.initialize()); break;}
-    										case"Commands": {c = initializeCmds(); break;}
-    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
-    										
+    							case 1: { //force
+    								if(sp.length > 2) switch(sp[2]){
+    								
+    									case"reboot": {
+    										LOGGER.warning("Forced reboot from ad admin");
+    										bot.execute(new GetUpdates().offset(offset));
+    										return;
     									}
-    									break;
+    									case"vUpdate": {yt.forceVideoUpdate(true); break;}
+    									case"noUpdate":{yt.forceNoUpdate(Boolean.parseBoolean(sp[3])); break;}
+    									default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    									
+    								} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
+        							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+    								break;
+    							}
+    							case 2: { //reload
+    								
+    								switch(sp[2]){
+    								
+    									case"Settings": {st.loadSettings(startTime); break;}
+    									case"Phrases": 	{st.setPhraseStatus(f.initialize()); break;}
+    									case"Commands": {c = initializeCmds(); break;}
+    									default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    									
     								}
-    								case 3: { //file
+        							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+    								break;
+    							}
+    							case 3: { //file
+    								
+    								String all = "";
+									for(int n = 4; n < sp.length; n++) all += sp[n] + " ";
+									try{
+										all = all.substring(0, all.length() - 1);
+									}catch(Exception e){}
+									
+    								if(sp.length > 3) switch(sp[2]){
     									
-    									String all = "";
-										for(int n = 4; n < sp.length; n++) all += sp[n] + " ";
-										try{
-											all = all.substring(0, all.length() - 1);
-										}catch(Exception e){}
-										
-    									if(sp.length > 3) switch(sp[2]){
-    										
-    										case"newFile": {FileO.newFile(sp[3]); break;}
-    										case"newPath": {FileO.newPath(sp[3]); break;}
-    										case"edit": {FileO.writer(sp[3], all); break;}
-    										case"addLine": {FileO.addWrite(all, sp[3]); break;}
-    										case"read": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.allLine(sp[3])).parseMode(ParseMode.HTML)); break;}
-    										case"delete": {FileO.delater(sp[3]); break;}
-    										case"cod": {FileO.toHtml(sp[3]); break;}
-    										case"decod": {FileO.fromHtml(sp[3]); break;}
-    										case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3])).parseMode(ParseMode.HTML)); break;}
-    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    									case"newFile": {FileO.newFile(sp[3]); break;}
+    									case"newPath": {FileO.newPath(sp[3]); break;}
+    									case"edit": {FileO.writer(sp[3], all); break;}
+    									case"addLine": {FileO.addWrite(all, sp[3]); break;}
+    									case"read": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.allLine(sp[3])).parseMode(ParseMode.HTML)); break;}
+    									case"delete": {FileO.delater(sp[3]); break;}
+    									case"cod": {FileO.toHtml(sp[3]); break;}
+    									case"decod": {FileO.fromHtml(sp[3]); break;}
+    									case"ls": {bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.ls(sp[3])).parseMode(ParseMode.HTML)); break;}
+    									default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    								
+    								} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
+        							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+    								break;
+    							}
+    							case 4: {//program
+    								
+    								if(sp.length > 2){
+    									String program = "";
+    									for(int n = 2; n < sp.length; n++) program += sp[n] + " ";
+    									program = program.substring(0, program.length() - 1);
     									
-    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
-    									break;
+    									if(!FileO.exist("programmed.ini"))
+    										FileO.newFile("programmed.ini"); else
+    											bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
+    									FileO.writer(program, "programmed.ini");
+    								} else if(FileO.exist("programmed.ini")){
+    									bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
+    									FileO.delater("programmed.ini");
     								}
-    								case 4: {//program
-    									
-    									if(sp.length > 2){
-    										String program = "";
-    										for(int n = 2; n < sp.length; n++) program += sp[n] + " ";
-    										program = program.substring(0, program.length() - 1);
-    										
-    										if(!FileO.exist("programmed.ini"))
-    											FileO.newFile("programmed.ini"); else
-    												bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating old programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
-    										FileO.writer(program, "programmed.ini");
-    									} else if(FileO.exist("programmed.ini")){
-    										bot.execute(new SendMessage(update.message().chat().id().toString(), "Delating programmed phrase (" + FileO.allLine("programmed.ini") + ")").parseMode(ParseMode.HTML));
-    										FileO.delater("programmed.ini");
+        							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+    								break;
+    								
+    							}	
+    							case 5: { //html
+    								
+    								String all = "";
+									for(int n = 3; n < sp.length; n++) all += sp[n] + " ";
+									try{
+										all = all.substring(0, all.length() - 1);
+									}catch(Exception e){}
+									
+									if(sp.length > 2) switch(sp[2]){
+    									case"to": {
+    										bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.toHtml(all)));
+    										break;
     									}
-    									break;
-    									
-    								}	
-    								case 5: { //html
-    									
-    									String all = "";
-										for(int n = 3; n < sp.length; n++) all += sp[n] + " ";
-										try{
-											all = all.substring(0, all.length() - 1);
-										}catch(Exception e){}
-										
-										if(sp.length > 2) switch(sp[2]){
-    										case"to": {
-    											bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.toHtml(all)));
-    											break;
+    									case"from": {
+    										try{
+    											bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.fromHtml(all)));
+    										}catch(Exception e){
+    											bot.execute(new SendMessage(update.message().chat().title().toString(), "Error: " + e));
     										}
-    										case"from": {
-    											try{
-    												bot.execute(new SendMessage(update.message().chat().id().toString(), FileO.fromHtml(all)));
-    											}catch(Exception e){
-    												bot.execute(new SendMessage(update.message().chat().title().toString(), "Error: " + e));
-    											}
-    											break;
-    										}
-    										default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
-    									} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
-    									
+    										break;
+    									}
+    									default: bot.execute(new SendMessage(update.message().chat().id().toString(), "Method not found"));
+    								} else bot.execute(new SendMessage(update.message().chat().id().toString(), "Too few argouments"));
+	    							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
+	    							break;
+    							}
+    							case 6: { //twverify
+    								Commands twCommand = getCommand("/subMessages", c, st);
+    								twCommand.commandExecute("/subMessages loading", bot, update.message().chat().id().toString(), st, i, t, f, admin);
+    								
+    								try{
+    									String token = sp[1].substring(1, sp[1].length());
+    									long expireDate = getUserSub(token, getTwitchUserFromOauth(token), st);
+    									if(expireDate > 0) {
+    										//expireDate += 3024000000L;
+    										
+    										if(!FileO.exist("sub" + File.separator + update.message().from().id())) {
+    											FileO.newFile("sub" + File.separator + update.message().from().id());
+    										} else gus.remove(getGroupUserIndexById(update.message().from().id().toString(), gus));
+    										
+    										gus.add(new GroupUser(update.message().from().id().toString(), expireDate));
+    			        					bot.execute(new RestrictChatMember(st.getManageGroupId(), update.message().from().id())
+    			        							.canSendMessages(true)
+    			        							.canSendMediaMessages(true)
+    			        							.canSendOtherMessages(true)
+    			        							.canAddWebPagePreviews(true));
+    										twCommand.commandExecute("/subMessages done", bot, update.message().chat().id().toString(), st, i, t, f, admin);
+    										bot.execute(new SendMessage(update.message().from().id().toString(), "v              Link              v")
+    												.replyMarkup(new InlineKeyboardMarkup(new InlineKeyboardButton[]{new InlineKeyboardButton("Click me >.<").url(st.getGroupLink())})));
+    										LOGGER.info(update.message().from().id() + ": User registrated. Subbed until " + expireDate);
+    									} else {
+    			        					LOGGER.info(update.message().from().id() + ": Error while registrating");
+    										twCommand.commandExecute("/subMessages error", bot, update.message().chat().id().toString(), st, i, t, f, admin);
+    									}
+    								}catch(Exception e){
+    									bot.execute(new SendMessage(update.message().chat().id(), "En error occurred:\n" + e));
+    									ea.alert(e);
     								}
     							}
-    							bot.execute(new SendMessage(update.message().chat().id().toString(), "Done"));
     						}
     						break;
     					}
@@ -359,6 +441,17 @@ public class Main {
 		return c;
 	}
 	
+	public static ArrayList<GroupUser> initializeGroupUser(){
+		ArrayList<GroupUser> gu = new ArrayList<GroupUser>();
+		File[] listOfFiles = new File("sub" + File.separator).listFiles();
+		for(File f : listOfFiles) {
+			String id = getNameFromPath(f.getName());
+			LOGGER.config("Loading sub: " + id);
+			try{ gu.add(new GroupUser(id, FileO.reader("sub" + File.separator + id))); } catch (Exception e) {LOGGER.warning("Error: " + e);}
+		}
+		return gu;
+	}
+	
 	public static void wait(int ms){
 		try{
 		    Thread.sleep(ms);
@@ -392,13 +485,13 @@ public class Main {
 			}
 		}
 	}
-	
 
 	public static void sendLiveNotification(TelegramBot bot, String title,  ArrayList<Chats> c, String s, int nType, boolean ytOrTw){
 		Main.LOGGER.info("Sending live notification (" + nType + ") with phrase: " + s);
 		for(Chats ch : c)
 			if(checkNotificationSettings(ch, nType) && checkYtOrTwitchEnabled(ch, ytOrTw)) new Thread(new LiveNotification(bot, s, title, ch.getChatId())).start();
 	}
+	
 	public static boolean checkNotificationSettings(Chats c, int type){
 		switch(type){
 			case 0: return c.getIfNotificationOnUpcoming();
@@ -407,14 +500,17 @@ public class Main {
 		}
 		return false;
 	}
+	
 	public static boolean checkYtLiveOrVideoEnabled(Settings s, int type){
 		return (type == 0 && s.getIfYoutubeVideo()) || (type > 0 && s.getIfYoutubeLive());
 	}
+	
 	public static boolean checkYtOrTwitchEnabled(Chats c, boolean b){
 		return (b && c.getIfYoutube()) || (!b && c.getIfTwitch());
 		//if(b) return c.getIfYoutube();
 		//return c.getIfTwitch();
 	}
+	
 	public static void sendTwitchOfflineMessage(ArrayList<Chats> c, TelegramBot bot, Twitch t, String mText){
 		LOGGER.fine("Phrase used: " + mText);
 		for(int i = 0; i < c.size(); i++){
@@ -424,6 +520,7 @@ public class Main {
 				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("NOWEBPREVIEW")) bot.execute(new EditMessageText(c.get(i).getChatId(), t.getMessageId()[i], t.getMText() + "\n" + st.getTwitchClickableTitle(t.getTitle())).parseMode(ParseMode.HTML).disableWebPagePreview(true));
 		}
 	}
+	
 	public static void sendLiveToStopMessage(ArrayList<Chats> c, TelegramBot bot, int[] msId, String id, String title, String oldMText, String newMText) throws IOException{
 		LOGGER.fine("Phrase used: " + newMText);
 		for(int i = 0; i < msId.length; i++)
@@ -432,17 +529,20 @@ public class Main {
 				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("DELETE")) bot.execute(new DeleteMessage(c.get(i).getChatId(), msId[i]));
 				else if(c.get(i).getLessSpamMethod().equalsIgnoreCase("NOWEBPREVIEW"))  bot.execute(new EditMessageText(c.get(i).getChatId(), msId[i], oldMText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML).disableWebPagePreview(true));
 	}
+	
 	public static void sendUpcomingToLiveMessage(String mText, Live l, TelegramBot bot, int[] msId, String id, String title, ArrayList<Chats> c) throws IOException{
 		LOGGER.fine("Phrase used: " + mText);
 		for(int i = 0; i < msId.length; i++)
 			if(c.get(i).getIfYoutube())
 				bot.execute(new EditMessageText(c.get(i).getChatId(), msId[i], mText + "\n" + convertToLink(id, FileO.toHtml(title))).parseMode(ParseMode.HTML));
 	}
+	
 	public static void pinMessage(TelegramBot bot, ArrayList<Chats> c, int[] messageId, boolean twOrYt){
 		for(int i = 0; i < messageId.length; i++)
 			if(c.get(i).getIfPin() && checkYtOrTwitchEnabled(c.get(i), twOrYt))
 				bot.execute(new PinChatMessage(c.get(i).getChatId(), messageId[i]).disableNotification(c.get(i).getPinNotification()));
 	}
+	
 	public static int[] sendTwitchMessage(TelegramBot bot, ArrayList<Chats> c, String mText, String link){
 		int[] msgIds = new int[c.size()];
 		LOGGER.fine("Phrase used: " + mText);
@@ -452,6 +552,7 @@ public class Main {
 			else msgIds[i] = 0;
 		return msgIds;
 	}
+	
 	public static int[] sendYoutubeMessage(TelegramBot bot, ArrayList<Chats> c, String mText, Info i){
 		int[] msgIds = new int[c.size()];
 		for(int n = 0; n < msgIds.length; n++) 
@@ -461,9 +562,99 @@ public class Main {
 			else msgIds[n] = 0;
 		return msgIds;
 	}
+	
 	public static String msIdConverter(int[] msid){
 		String ret = "";
 		for(int i : msid) ret += i + "-";
 		return ret.substring(0, ret.length() - 1);
+	}
+	
+	public static String getTwitchUserFromOauth(String token) throws Exception{
+		JSONObject response = new JSONObject(Download.dwn("https://api.twitch.tv/kraken/user?oauth_token=" + token));
+		return response.getString("name");
+	}
+	
+	public static long getUserSub(String token, String user, Settings s) throws ConnectException, JSONException, InvocationTargetException{
+		JSONObject response;
+		try{
+			response = new JSONObject(Download.dwn("https://api.twitch.tv/kraken/users/" + user + "/subscriptions/" + s.getTwitchChannel() + "?oauth_token=" + token));
+		}catch(Exception e){
+			return 0;
+		}
+		long expireDate = Instant.parse(response.getString("created_at")).toEpochMilli() + 2937600000L;
+		while(System.currentTimeMillis() > expireDate) expireDate += 2592000000L;
+		return expireDate;
+	}
+	
+	public static int getGroupUserIndexById(String id, ArrayList<GroupUser> gus){
+		int i = 0;
+		for(GroupUser gu : gus) {
+			if(gu.getId().equals(id)) break;
+			i++;
+		}
+		return i;
+	}
+	
+	public static Commands getCommand(String command, ArrayList<Commands> c, Settings s){
+		Commands ret = null;
+		for(Commands cmd : c){
+			if(cmd.isThisCommand(command, st.getUser(), s)) {
+				ret = cmd;
+				break;
+			}
+		}
+		return ret;
+	}
+	
+	public static String replaceRuntimeData(String str, Info i, Phrase f, Twitch t, Settings s, String id) throws IOException{
+		return str
+			.replaceAll("%phraseStatus%", Arrays.toString(s.getPhraseStatus()))
+			.replaceAll("%gToken%", s.getGoogleToken())
+			.replaceAll("%tToken%", s.getTelegramToken())
+			.replaceAll("%twToken%", st.getTwitchToken())
+			.replaceAll("%id%", s.getChannelId())
+			.replaceAll("%chat%", s.getChatsId().replace("]", "").replace("[", ""))
+			.replaceAll("%botName%", s.getBotName())
+			.replaceAll("%botUsername%", s.getUser())
+			.replaceAll("%dir%", s.getDefaultDirectory())
+			.replaceAll("%uptime%", s.getUpTime())
+			.replaceAll("%twitchUser%", s.getTwitchChannel())
+			.replaceAll("%lastvideo%", last(i, f, s, t))
+			.replaceAll("%twitch%", twitch(t, s, f))
+			.replaceAll("%version%", version)
+			.replaceAll("%sub%", getSubStatus(id))
+			.replaceAll("%lang%", st.getLoginPageLang())
+			.replaceAll("%programmed%", String.valueOf(FileO.exist("programmed.ini")));
+	}
+	
+	public static String twitch(Twitch t, Settings s, Phrase f) throws IOException{
+		int i = 7;
+		if(t.getIfInLive()) i--;
+		return f.getSinglePhrases(i, s, t, false) + "\n" + s.getTwitchClickableTitle(t.getTitle());
+	}
+	
+	public static String last(Info i, Phrase f, Settings s, Twitch t) throws IOException{
+		return f.getSinglePhrases(convertType(i.getVideoId()), s, t, false) + "\n" + convertToLink(i.getVideoId(), i.getVideoName());
+	}
+	public static String getSubStatus(String id) throws IOException{
+		File[] listOfFiles = new File("sub" + File.separator).listFiles();
+		for(File f : listOfFiles) {
+			String user = getNameFromPath(f.getName());
+			if(user.equals(id)) {
+				long expireDate = new GroupUser(user, FileO.reader("sub" + File.separator + user)).getExpireDate();
+				if(System.currentTimeMillis() < expireDate)
+					return "Abbonato - Scade il " + new SimpleDateFormat("dd/MM/yy HH:mm").format(new Date(expireDate));
+				return "Non abbonato";
+			}
+		}
+		return "-";
+	}
+	public static String remainTime(long ms){
+		long estimatedTime = (System.currentTimeMillis() - ms) / 1000;
+		int hours = (int) estimatedTime / 3600;
+	    int secs = (int) estimatedTime - hours * 3600;
+	    int mins = secs / 60;
+	    secs = secs - mins * 60;
+	    return hours + ":" + mins + ":" + secs;
 	}
 }

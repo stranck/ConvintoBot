@@ -1,9 +1,5 @@
 package reloaded.convintobot;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.ConnectException;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Twitch {
@@ -25,7 +21,7 @@ public class Twitch {
 		} catch(Exception e) {e.printStackTrace();}
 	}
 	
-	public int checkLive(Settings st) throws ConnectException, JSONException, InvocationTargetException{
+	public int checkLive(Settings st) throws Exception{
 		JSONObject stream = new JSONObject(Download.dwn(st.getTwitchUrl(0)));
 		
 		int ret = 0; //0 = offline; 1 = gone offline; 2 = online; 3 = gone online;

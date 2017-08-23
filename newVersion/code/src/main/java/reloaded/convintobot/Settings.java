@@ -8,9 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Settings {
-	private long startTime, liveOfflineDelay, repeatDelay = Long.MAX_VALUE;
-	private boolean youtube, ytLive, ytVideo, twitch, mantainPhrase, useBotName = false;
-	private String gToken, tToken, wToken, yId, tId, botName, user, dir = "";
+	private long startTime, liveOfflineDelay, notifyBeforeDelay, keepInGroupDelay, repeatDelay = Long.MAX_VALUE;
+	private boolean youtube, ytLive, ytVideo, twitch, mantainPhrase, manageGroup, notifyBefore, keepInGroup, muteUntilLogin, useBotName = false;
+	private String gToken, tToken, wToken, yId, tId, botName, user, manageGroupId, link, lang, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
 	private ArrayList<Chats> chats = new ArrayList<Chats>();
 	private boolean phraseStatus[] = new boolean[8];
@@ -40,6 +40,17 @@ public class Settings {
 				FileO.addWrite("config.json", "        \"enable\" : true / false,");
 				FileO.addWrite("config.json", "        \"token\" : \"INSERIT YOUR TWITCH CLIENT ID HERE\",");
 				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\"");
+				FileO.addWrite("config.json", "        \"manageGroup\" : true / false,");
+				FileO.addWrite("config.json", "        \"manageGroupSettings\" : {");
+				FileO.addWrite("config.json", "            \"group\" : \"INSERIT GROUP CHAT ID HERE\",");
+				FileO.addWrite("config.json", "            \"link\" : INSERIT THE LINK TO THE GROUP HERE,");
+				FileO.addWrite("config.json", "            \"muteUntilLogin\" : true / false,");
+				FileO.addWrite("config.json", "            \"lang\" : INSERIT THE LANGUAGE CODE HERE,");
+				FileO.addWrite("config.json", "            \"notifyBefore\" : true / false,");
+				FileO.addWrite("config.json", "            \"notifyBeforeDelay\" : INSERIT TIME IN MS,");
+				FileO.addWrite("config.json", "            \"keepInGroup\" : true / false,");
+				FileO.addWrite("config.json", "            \"keepInGroupDelay\" : INSERIT TIME IN MS,");
+				FileO.addWrite("config.json", "        },");
 				FileO.addWrite("config.json", "    },");
 				FileO.addWrite("config.json", "    \"chats\" : [");
 				FileO.addWrite("config.json", "        {");
@@ -85,14 +96,25 @@ public class Settings {
 				twitch = true;
 				wToken = twObj.getString("token");
 				tId = twObj.getString("id");
+				manageGroup = twObj.getBoolean("manageGroup");
+				if(manageGroup) {
+					JSONObject mgObj = twObj.getJSONObject("manageGroupSettings");
+					manageGroupId = mgObj.getString("group");
+					link = mgObj.getString("link");
+					muteUntilLogin = mgObj.getBoolean("muteUntilLogin");
+					lang = mgObj.getString("lang");
+					notifyBefore = mgObj.getBoolean("notifyBefore");
+					if(notifyBefore) notifyBeforeDelay = mgObj.getLong("notifyBeforeDelay");
+					keepInGroup = mgObj.getBoolean("keepInGroup");
+					if(keepInGroup) keepInGroupDelay = mgObj.getLong("keepInGroupDelay");
+				}
 			}
-
 			if(config.has("botName")) botName = config.getString("botName"); else {
 				useBotName = true;
 				Main.LOGGER.config("Using telegram bot name");
 			}
-			startTime = sTime;
 			
+			startTime = sTime;
 			dir = System.getProperty("user.dir") + File.separator;
 			
 			JSONArray admin = config.getJSONArray("admins");
@@ -156,6 +178,15 @@ public class Settings {
 	public String getTwitchChannel(){
 		return tId;
 	}
+	public String getManageGroupId(){
+		return manageGroupId;
+	}
+	public String getGroupLink(){
+		return link;
+	}
+	public String getLoginPageLang(){
+		return lang;
+	}
 	public boolean getPhraseStatus(int type){
 		return phraseStatus[type];
 	}
@@ -180,11 +211,29 @@ public class Settings {
 	public boolean getIfYoutubeLive(){
 		return ytLive;
 	}
+	public boolean getIfManageGroup(){
+		return manageGroup;
+	}
+	public boolean getIfNotifyBefore(){
+		return notifyBefore;
+	}
+	public boolean getIfKeepInGroup(){
+		return keepInGroup;
+	}
+	public boolean getIfMuteUntilLogin(){
+		return muteUntilLogin;
+	}
 	public long getOfflineDelay(){
 		return liveOfflineDelay;
 	}
 	public long getRepeatDelay(){
 		return repeatDelay;
+	}
+	public long getNotifyBeforeDelay(){
+		return notifyBeforeDelay;
+	}
+	public long getKeepInGroupDelay(){
+		return keepInGroupDelay;
 	}
 	public ArrayList<Chats> getChats(){
 		return chats;
@@ -219,12 +268,7 @@ public class Settings {
 		return "<a href=\"https://www.twitch.tv/" + tId + "\">" + FileO.toHtml(title) + "</a>";
 	}
 	public String getUpTime(){
-		long estimatedTime = (System.currentTimeMillis() - startTime) / 1000;
-		int hours = (int) estimatedTime / 3600;
-	    int secs = (int) estimatedTime - hours * 3600;
-	    int mins = secs / 60;
-	    secs = secs - mins * 60;
-	    return hours + ":" + mins + ":" + secs;
+		return Main.remainTime(startTime);
 	}
 	public String getChatsId(){
 		String[] s = new String[chats.size()];

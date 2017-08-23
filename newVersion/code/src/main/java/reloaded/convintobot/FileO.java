@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.net.ConnectException;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
@@ -89,7 +87,7 @@ public class FileO {
 		    System.err.println(x);
 		}
 	}
-    public static boolean upFile() throws ConnectException, InvocationTargetException{
+    public static boolean upFile() throws Exception{
     	String[] result = Download.dwn("http://stranckutilies.altervista.org/editFile").split(";");
     	boolean b = false;
     	for (int x=0; x<result.length; x++) {

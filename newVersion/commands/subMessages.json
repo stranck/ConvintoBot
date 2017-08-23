@@ -1,0 +1,20 @@
+{
+    "commandType" : 1,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : true,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"why u do diz",
+			"<i>Caricamento dei dati del tuo canale in corso. Attendere prego...</i>",
+			"<b>Fatto!</b> Stato attuale: <b>%sub%</b>\n\nUsa il pulsante qui sotto per entrare nel gruppo ufficiale di %twitchUser% :D",
+			"<b>Si è verificato un problema... Sicuro di essere abbonato?</b>\n\nSe credi si tratti di un errore, riprova, oppure contattami su <a href=\"https://telegram.me/LucaStranck\">Telegram</a>",
+
+		],
+		"args" : {
+			"loading" : 1,
+			"done" : 2,
+			"error" : 3
+		}
+	}
+}

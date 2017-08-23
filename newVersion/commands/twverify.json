@@ -1,0 +1,13 @@
+{
+    "commandType" : 0,
+	"randomResponse" : false,
+	"DisableWebPagePreview" : false,
+	"admin" : false,
+	"responseData" : {
+		"response" : [
+			"6"
+		],
+		"args" : {
+		}
+	}
+}

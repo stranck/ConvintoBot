@@ -5,11 +5,11 @@
 	</head>
 	<body>
     	<p>Please wait</p>
-        <p><a id = "stuck"></a></p>
+        <p>If you're stuck here, please try again. If the problem persists, try from a different browser.</p>
 		<script>
 			window.opener.redirect(window.location);
             setTimeout( function(){
-            	document.getElementById("stuck").innerHTML = "If you're stuck here, please retry from a different browser";
+            	window.opener.redirect(window.location);
             }, 5000);
   		</script>
 	</body>

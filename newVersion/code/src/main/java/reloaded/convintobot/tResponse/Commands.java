@@ -3,14 +3,12 @@ package reloaded.convintobot.tResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.model.request.ParseMode;
@@ -60,33 +58,34 @@ public class Commands {
 		}
 	}
 	
-	public boolean isThisCommand(String cmd, String botUser){
+	public boolean isThisCommand(String cmd, String botUser, Settings st){
 		try{
 			String[] sp = cmd.split("\\s+");
-			if(command.equalsIgnoreCase("/start") && sp.length > 1) return false;
+			if(st.getIfManageGroup() && command.equalsIgnoreCase("/twverify") && sp.length > 1 && sp[1].charAt(0) == '-') return true;
+			if(command.equalsIgnoreCase("/start") && sp.length > 1) return false; //se il comando fatto è "start" e questo comando è "start" esegui "start"; se il comando fatto è "start qualcosa" non fare nietne
 			return sp[0].equalsIgnoreCase(command) || (sp[0].equalsIgnoreCase("/start") && sp[1].equalsIgnoreCase(command.substring(1, command.length()))) || sp[0].equalsIgnoreCase(command + "@" + botUser);
 		}catch(Exception e){}
 		return false;
 	}
-	public int commandExecute(String cmd, TelegramBot bot, Update update, Settings st, Info i, Twitch t, Phrase f, boolean admin){
+	public int commandExecute(String cmd, TelegramBot bot, String chatId, Settings st, Info i, Twitch t, Phrase f, boolean admin){
 		try{
-			String send = getString(cmd, st, i, t, f);
+			String send = getString(cmd, st, i, t, f, chatId);
 
-			if((onlyAdmin==admin)||admin)
+			if((onlyAdmin == admin) || admin)
 				switch(commandType){
 					case 0: {
 						return Integer.parseInt(send);
 					}
 					case 1: {
-						bot.execute(new SendMessage(update.message().chat().id().toString(), send).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
+						bot.execute(new SendMessage(chatId, send).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
 						break;
 					}
 					case 2: {
-						bot.execute(new SendPhoto(update.message().chat().id().toString(), send));
+						bot.execute(new SendPhoto(chatId, send));
 						break;
 					}
 					case 3: {
-						bot.execute(new SendAudio(update.message().chat().id().toString(), send));
+						bot.execute(new SendAudio(chatId, send));
 						break;
 					}
 					case 4: {
@@ -94,15 +93,15 @@ public class Commands {
 						int n;
 						if(sp.length > 1) n = response.getArgs().getInt(sp[1]); else n = 0;
 						ArrayList<InlineKeyboardButton> ikb = new ArrayList<InlineKeyboardButton>();
-						for(Inline in : inline.get(n)) ikb.add(in.getButton());
-						bot.execute(new SendMessage(update.message().chat().id().toString(), send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
+						for(Inline in : inline.get(n)) ikb.add(in.getButton(i, f, t, st, chatId));
+						bot.execute(new SendMessage(chatId, send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
 					}
 			}
 		}catch(Exception e){Main.ea.alert(e);}
 		return 0;
 	}
 	
-	public String getString(String cmd, Settings st, Info i, Twitch t, Phrase f) throws IOException{
+	public String getString(String cmd, Settings st, Info i, Twitch t, Phrase f, String id) throws IOException{
 		String sp[] = cmd.split("\\s+");
 		Random r = new Random();
 		String send;
@@ -111,29 +110,7 @@ public class Commands {
 			if(sp.length > 1 && !sp[0].equalsIgnoreCase("/start")) send = response.getResponse().get(response.getArgs().getInt(sp[1]));
 				else send = response.getResponse().get(0);
 		else send = response.getResponse().get(r.nextInt(response.getResponse().size()));
-		return send
-				.replaceAll("%phraseStatus%", Arrays.toString(st.getPhraseStatus()))
-				.replaceAll("%gToken%", st.getGoogleToken())
-				.replaceAll("%tToken%", st.getTelegramToken())
-				.replaceAll("%id%", st.getChannelId())
-				.replaceAll("%chat%", st.getChatsId()).replace("]", "").replace("[", "")
-				.replaceAll("%botName%", st.getBotName())
-				.replaceAll("%dir%", st.getDefaultDirectory())
-				.replaceAll("%uptime%", st.getUpTime())
-				.replaceAll("%lastvideo%", last(i, f, st, t))
-				.replaceAll("%twitch%", twitch(t, st, f))
-				.replaceAll("%version%", Main.version)
-				.replaceAll("%programmed%", String.valueOf(FileO.exist("programmed.ini")));
-	}
-	
-	private String twitch(Twitch t, Settings st, Phrase f) throws IOException{
-		int i = 7;
-		if(t.getIfInLive()) i--;
-		return f.getSinglePhrases(i, st, t, false) + "\n" + st.getTwitchClickableTitle(t.getTitle());
-	}
-	
-	private String last(Info i, Phrase f, Settings st, Twitch t) throws IOException{
-		return f.getSinglePhrases(Main.convertType(i.getVideoId()), st, t, false) + "\n" + Main.convertToLink(i.getVideoId(), i.getVideoName());
+		return Main.replaceRuntimeData(send, i, f, t, st, id);
 	}
 	
 	private ArrayList<Inline> getArrayList(JSONArray il){

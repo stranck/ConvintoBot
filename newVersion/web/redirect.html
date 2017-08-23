@@ -2,7 +2,7 @@
 <!Thanks to Valerio Bellic for the site idea and helping me in the front-end process>
 <html>
 	<head>
-  		<title>Please login</title>
+  		<title></title>
         <style type="text/css">
         	@font-face {
     			font-family: 'BerlinSans';
@@ -44,7 +44,7 @@
 			</p>
 
 			<p>
-            	<a class = "txt" id = "text"> Click the button and login on Twitch </a>
+            	<a class = "txt" id = "text"> </a>
 				<!img src = "text.png" style = "width: auto; height: 10vh;">
 			</p>
             <p> &nbsp; </p>
@@ -56,13 +56,26 @@
 			</p>
 		</center>
 		<script>
-        	var url = window.location, login, s;
+        	var url = window.location, login, s, lang;
+            var start = ["Click the button and login on Twitch", "Premi il pulsante e accedi su Twitch!"];
+            var startB= ["Login", "Accedi"];
+            var startT= ["Please login", "Accedi"]
+            var after = ["You will be redirected to telegram in a while", "Presto sarai reindirizzato a Telegram"];
+            var afterB= ["Please wait", "Attendere prego"];
+            var afterT= ["Redirecting to telegram...", "Reindirizzamento su Telegram..."];
             //alert(url);
+            switch(getParameterByName("lang", url)){
+            	case "en": { lang = 0; break; }
+                case "it": { lang = 1; break; }
+            }
+            document.title = startT[lang];
+            document.getElementById("text").innerHTML = start[lang];
+            document.getElementById("button").innerHTML = startB[lang];
             
             function redirect(uri) {
-            	document.title = "Redirecting to telegram...";
-                document.getElementById("text").innerHTML = "You will be redirected to telegram in a while";
-                document.getElementById("button").innerHTML = "Please wait";
+            	document.title = afterT[lang];
+                document.getElementById("text").innerHTML = after[lang];
+                document.getElementById("button").innerHTML = afterB[lang];
                 login.close();
                 s = "https://t.me/" + getParameterByName("bot_user", url) + "?start=-" + getParameterByName("access_token", uri);
                 url.replace(s);
