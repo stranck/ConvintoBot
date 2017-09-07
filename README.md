@@ -1,7 +1,7 @@
 # ConvintoBot
 This Bot sends notifications to your Telegram Channel when a new YouTube video is uploaded (or made public). 
 
-With the last update it also includes optional Twitch notifications for Live Streaming and the awesome **Subscribers Group Manager** function! 
+With the last update it also include optional Twitch notifications for Live Streaming and the awesome **Subscribers Group Manager** function! 
 
 ## Changelog
 
