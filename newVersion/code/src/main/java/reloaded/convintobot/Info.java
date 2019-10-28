@@ -4,7 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Info {
-	private String id, type, name;
+	private String id = "", type = "", name = "";
 	
 	public void update(int n, Settings s){
 		while(true){ //this gibe me cancer
@@ -48,6 +48,12 @@ public class Info {
 	}
 	public String getVideoName(){
 		return name;
+	}
+	
+	public void set(String i, String t, String n){
+		id = i;
+		name = n;
+		type = t;
 	}
 	
 	public String toString(){

@@ -13,7 +13,7 @@ public class Format extends Formatter{
 
     @Override 
     public String format(final LogRecord record){
-    	return "[" + time("dd-HH:mm:ss") + "][" + record.getLevel() + "]\t" + record.getMessage().replaceAll("\n", "") + "\n";
+    	return "[" + time("dd/MM/yyyy-HH:mm:ss") + "][" + record.getLevel() + "]\t" + record.getMessage().replaceAll("\n", "") + "\n";
     }
     
 	private String time(String format) {

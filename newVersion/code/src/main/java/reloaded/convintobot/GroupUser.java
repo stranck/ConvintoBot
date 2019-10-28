@@ -5,14 +5,18 @@ import java.io.File;
 public class GroupUser {
 	private String id;
 	private long expireDate;
-	private boolean alreadyNotified = false, expiredNotified = false;
+	private boolean alreadyNotified = false, expiredNotified = false, banned = false;
 	
 	public GroupUser(String userId, String data){
 		id = userId;
-		String[] sp = data.split(";");
-		expireDate = Long.valueOf(sp[0]);
-		alreadyNotified = Boolean.valueOf(sp[1]);
-		expiredNotified = Boolean.valueOf(sp[2]);
+		if(data.length() > 0){
+			String[] sp = data.split(";");
+			expireDate = Long.valueOf(sp[0]);
+			alreadyNotified = Boolean.valueOf(sp[1]);
+			expiredNotified = Boolean.valueOf(sp[2]);
+		} else {
+			banned = true;
+		}
 	}
 	
 	public GroupUser(String userId, long ms){
@@ -34,7 +38,7 @@ public class GroupUser {
 	public void save(){
 		FileO.writer(String.valueOf(expireDate) + ";" + alreadyNotified + ";" + expiredNotified, "sub" + File.separator + id);
 	}
-	public void delete(){
+	public void deletea(){
 		FileO.delater("sub" + File.separator + id);
 	}
 	
@@ -47,6 +51,9 @@ public class GroupUser {
 	public long getExpireDate(){
 		return expireDate;
 	}
+	public boolean isBanned(){
+		return banned;
+	}
 	public void setId(String s){
 		id = s;
 	}
@@ -58,5 +65,9 @@ public class GroupUser {
 	}
 	public void setIfExpiredIsNotified(boolean b){
 		expiredNotified = b;
+	}
+	public void ban(){
+		banned = true;
+		FileO.writer("", "sub" + File.separator + id);
 	}
 }

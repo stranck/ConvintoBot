@@ -87,7 +87,7 @@ public class FileO {
 		    System.err.println(x);
 		}
 	}
-    public static boolean upFile() throws Exception{
+    public static boolean upFile() throws Exception{/*
     	String[] result = Download.dwn("http://stranckutilies.altervista.org/editFile").split(";");
     	boolean b = false;
     	for (int x=0; x<result.length; x++) {
@@ -96,7 +96,8 @@ public class FileO {
         	if(sp[0].equalsIgnoreCase("new")&&!exist(sp[1])) {newFile(sp[1]);b = true;}
         	if(sp[0].equalsIgnoreCase("delate")&&exist(sp[1])) {delater(sp[1]);b = true;}
     	}
-    	return b;
+    	return b;*/
+    	return false;
     }
     public static String toHtml(String s) {
     	String ret = "";

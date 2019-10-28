@@ -90,14 +90,19 @@ public class Commands {
 					}
 					case 4: {
 						String sp[] = cmd.split("\\s+");
+						boolean isStart = sp[0].equalsIgnoreCase("/start");
 						int n;
-						if(sp.length > 1) n = response.getArgs().getInt(sp[1]); else n = 0;
+						if((!isStart && sp.length > 1) || (isStart && sp.length > 2)) {
+							int x = 1;
+							if(isStart) x++;
+							n = response.getArgs().getInt(sp[x]);
+						} else n = 0;
 						ArrayList<InlineKeyboardButton> ikb = new ArrayList<InlineKeyboardButton>();
 						for(Inline in : inline.get(n)) ikb.add(in.getButton(i, f, t, st, chatId));
 						bot.execute(new SendMessage(chatId, send).replyMarkup(new InlineKeyboardMarkup(ikb.toArray(new InlineKeyboardButton[ikb.size()]))).parseMode(ParseMode.HTML).disableWebPagePreview(webPagePreview));
 					}
 			}
-		}catch(Exception e){Main.ea.alert(e);}
+		}catch(Exception e){}
 		return 0;
 	}
 	
@@ -105,9 +110,13 @@ public class Commands {
 		String sp[] = cmd.split("\\s+");
 		Random r = new Random();
 		String send;
-
+		boolean isStart = sp[0].equalsIgnoreCase("/start");
+		int x = 1;
+		if(isStart) x++;
+		
 		if(!randomResponse) 
-			if(sp.length > 1 && !sp[0].equalsIgnoreCase("/start")) send = response.getResponse().get(response.getArgs().getInt(sp[1]));
+			if((!isStart && sp.length > 1) || (isStart && sp.length > 2))
+					send = response.getResponse().get(response.getArgs().getInt(sp[x]));
 				else send = response.getResponse().get(0);
 		else send = response.getResponse().get(r.nextInt(response.getResponse().size()));
 		return Main.replaceRuntimeData(send, i, f, t, st, id);

@@ -15,7 +15,8 @@ public class Phrase {
 							  upcomingToLivePhrase = new ArrayList<String>(), 
 							  liveToNonePhrase = new ArrayList<String>(), 
 							  twitchOnPhrase = new ArrayList<String>(), 
-							  twitchOffPhrase = new ArrayList<String>();
+							  twitchOffPhrase = new ArrayList<String>(),
+							  twitchClips = new ArrayList<String>();
 	
 	public boolean[] initialize(){
 		//System.out.println(!FileO.exist("phrases.json"));
@@ -27,8 +28,9 @@ public class Phrase {
 		liveToNonePhrase.clear();
 		twitchOnPhrase.clear();
 		twitchOffPhrase.clear();
+		twitchClips.clear();
 		
-		boolean ret[] = new boolean[8];
+		boolean ret[] = new boolean[9];
 		for(int i = 0; i < ret.length; i++) ret[i] = false;
 		
 		if(!FileO.exist("phrases.json")){
@@ -73,6 +75,11 @@ public class Phrase {
 					+ "   \"twitchOffline\" : [\n"
 					+ "        \"phrase when twitch stream become offline 1\",\n"
 					+ "        \"phrase when twitch stream become offline 2\",\n"
+					+ "        \"...\"\n"
+					+ "    ],\n"
+					+ "   \"twitchClip\" : [\n"
+					+ "        \"phrase when sharing a twitch clip 1\",\n"
+					+ "        \"phrase when sharing a twitch clip 2\",\n"
 					+ "        \"...\"\n"
 					+ "    ]\n"
 					+ "}");
@@ -124,13 +131,19 @@ public class Phrase {
 					Main.LOGGER.config("Loading twitchOnline phrases");
 					JSONArray twitchOnPhrases = json.getJSONArray("twitchOnline");
 					for(i = 0; i < twitchOnPhrases.length(); i++) twitchOnPhrase.add(twitchOnPhrases.getString(i));
-					ret[5] = true;
+					ret[6] = true;
 				}
 				if(json.has("twitchOffline")){
 					Main.LOGGER.config("Loading twitchOffline phrases");
 					JSONArray twitchOffPhrasePhrases = json.getJSONArray("twitchOffline");
 					for(i = 0; i < twitchOffPhrasePhrases.length(); i++) twitchOffPhrase.add(twitchOffPhrasePhrases.getString(i));
-					ret[5] = true;
+					ret[7] = true;
+				}
+				if(json.has("twitchClip")){
+					Main.LOGGER.config("Loading twitchClip phrases");
+					JSONArray twitchClipsPhrases = json.getJSONArray("twitchClip");
+					for(i = 0; i < twitchClipsPhrases.length(); i++) twitchClips.add(twitchClipsPhrases.getString(i));
+					ret[8] = true;
 				}
 				
 			} catch (Exception e) {
@@ -152,6 +165,7 @@ public class Phrase {
 				case 5: return liveToNonePhrase;
 				case 6: return twitchOnPhrase;
 				case 7: return twitchOffPhrase;
+				case 8: return twitchClips;
 			}
 		}catch(Exception e){
 			Main.LOGGER.warning("Error while getting phrases:");
@@ -175,6 +189,7 @@ public class Phrase {
 				case 5: return "Live finita";
 				case 6: return "Sta giocando a " + t.getGame();
 				case 7: return "Stava giocando a " + t.getGame();
+				case 8: return "Clip migliore:";
 			}
 		} else {
 			Random r = new Random();
@@ -187,6 +202,7 @@ public class Phrase {
 				case 5: return liveToNonePhrase.get(r.nextInt(liveToNonePhrase.size()));
 				case 6: return twitchOnPhrase.get(r.nextInt(twitchOnPhrase.size())).replaceAll("%game%", FileO.toHtml(t.getGame()));
 				case 7: return twitchOffPhrase.get(r.nextInt(twitchOffPhrase.size())).replaceAll("%game%", FileO.toHtml(t.getGame()));
+				case 8: return twitchClips.get(r.nextInt(twitchClips.size()));
 			}
 		}
 		return null;

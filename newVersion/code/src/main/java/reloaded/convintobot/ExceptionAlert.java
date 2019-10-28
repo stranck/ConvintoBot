@@ -17,7 +17,6 @@ public class ExceptionAlert {
 	private Phrase f;
 	
 	public ExceptionAlert(TelegramBot b, ArrayList<Commands> c, Phrase ph){
-		i.update(0, Main.st);
 		bot = b;
 		f = ph; 
 		for(Commands cmd : c){
@@ -31,10 +30,10 @@ public class ExceptionAlert {
 	public void alert(Exception e){
 		
 		try{
-			e.printStackTrace();
+			//e.printStackTrace();
 			bot.execute(new SendMessage("-169611331", "An exception occurred\n\n" + stat.getString("/stat low", Main.st, i, t, f, "") + "\nException data:\n" + getThrow(e)));
 		}catch(Exception sfiga){ //qui sarebbe il classisco "unexpected error occured while displaying an unexpected error"
-			Main.wait(5000);
+			//Main.wait(5000);
 			sfiga.printStackTrace();
 		}
 		

@@ -9,9 +9,10 @@ import org.json.JSONObject;
 
 public class Settings {
 	private long startTime, liveOfflineDelay, notifyBeforeDelay, keepInGroupDelay, repeatDelay = Long.MAX_VALUE;
-	private boolean youtube, ytLive, ytVideo, twitch, mantainPhrase, manageGroup, notifyBefore, keepInGroup, muteUntilLogin, useBotName = false;
-	private String gToken, tToken, wToken, yId, tId, botName, user, manageGroupId, link, lang, dir = "";
+	private boolean youtube, ytLive, ytVideo, twitch, checkTwitch, mantainPhrase, manageGroup, notifyExpire, notifyBefore, keepInGroup, keepInGroup4e, muteUntilLogin, clipTrending, twitchClips, useBotName = false;
+	private String gToken, tToken, wToken, yId, tLogin, redirect, secret, tUserId, botName, user, manageGroupId, link, lang, clipInterval, clipDay, dir = "";
 	private ArrayList<String> admins = new ArrayList<String>();
+	private ArrayList<String> allowedTwitchTypes = new ArrayList<String>();
 	private ArrayList<Chats> chats = new ArrayList<Chats>();
 	private boolean phraseStatus[] = new boolean[8];
 	
@@ -38,19 +39,30 @@ public class Settings {
 				FileO.addWrite("config.json", "    },");
 				FileO.addWrite("config.json", "    \"twitch\" : {");
 				FileO.addWrite("config.json", "        \"enable\" : true / false,");
+				FileO.addWrite("config.json", "        \"checkTwitch\" : true / false,");
 				FileO.addWrite("config.json", "        \"token\" : \"INSERIT YOUR TWITCH CLIENT ID HERE\",");
 				FileO.addWrite("config.json", "        \"id\" : \"INSERIT YOUR CHANNEL ID HERE\"");
 				FileO.addWrite("config.json", "        \"manageGroup\" : true / false,");
 				FileO.addWrite("config.json", "        \"manageGroupSettings\" : {");
+				FileO.addWrite("config.json", "        	   \"secret\" : \"INSERIT YOUR TWITCH SECRET HERE\",");
+				FileO.addWrite("config.json", "            \"redirect\" : \"INSERIT REDIRECT LINK HERE\",");
 				FileO.addWrite("config.json", "            \"group\" : \"INSERIT GROUP CHAT ID HERE\",");
 				FileO.addWrite("config.json", "            \"link\" : INSERIT THE LINK TO THE GROUP HERE,");
 				FileO.addWrite("config.json", "            \"muteUntilLogin\" : true / false,");
 				FileO.addWrite("config.json", "            \"lang\" : INSERIT THE LANGUAGE CODE HERE,");
+				FileO.addWrite("config.json", "            \"notifyExpire\" : true / false,");
 				FileO.addWrite("config.json", "            \"notifyBefore\" : true / false,");
 				FileO.addWrite("config.json", "            \"notifyBeforeDelay\" : INSERIT TIME IN MS,");
+				FileO.addWrite("config.json", "            \"keepInGroupForever\" : true / false,");
 				FileO.addWrite("config.json", "            \"keepInGroup\" : true / false,");
-				FileO.addWrite("config.json", "            \"keepInGroupDelay\" : INSERIT TIME IN MS,");
+				FileO.addWrite("config.json", "            \"keepInGroupDelay\" : INSERIT TIME IN MS");
 				FileO.addWrite("config.json", "        },");
+				FileO.addWrite("config.json", "        \"shareClips\" : true / false,");
+				FileO.addWrite("config.json", "        \"shareClipsSettings\" : {");
+				FileO.addWrite("config.json", "            \"interval\" : \"day / week / month\",");
+				FileO.addWrite("config.json", "            \"day\" : INSERIT HOUR/DAY TIME,");
+				FileO.addWrite("config.json", "            \"trending\" : true / false,");
+				FileO.addWrite("config.json", "        }");
 				FileO.addWrite("config.json", "    },");
 				FileO.addWrite("config.json", "    \"chats\" : [");
 				FileO.addWrite("config.json", "        {");
@@ -95,18 +107,42 @@ public class Settings {
 			if(twObj.getBoolean("enable")){
 				twitch = true;
 				wToken = twObj.getString("token");
-				tId = twObj.getString("id");
+				tLogin = twObj.getString("id");
+				//tUserId = getTwitchUserId();
+				checkTwitch = twObj.getBoolean("checkTwitch");
+				if(twObj.has("allowedTypes")){
+					JSONArray types = twObj.getJSONArray("allowedTypes");
+					for(int i = 0; i < types.length(); i++)
+						allowedTwitchTypes.add(types.getString(i));
+				}
 				manageGroup = twObj.getBoolean("manageGroup");
 				if(manageGroup) {
 					JSONObject mgObj = twObj.getJSONObject("manageGroupSettings");
+					secret = mgObj.getString("secret");
+					redirect = mgObj.getString("redirect");
 					manageGroupId = mgObj.getString("group");
 					link = mgObj.getString("link");
 					muteUntilLogin = mgObj.getBoolean("muteUntilLogin");
 					lang = mgObj.getString("lang");
+					notifyExpire = mgObj.getBoolean("notifyExpire");
 					notifyBefore = mgObj.getBoolean("notifyBefore");
 					if(notifyBefore) notifyBeforeDelay = mgObj.getLong("notifyBeforeDelay");
-					keepInGroup = mgObj.getBoolean("keepInGroup");
-					if(keepInGroup) keepInGroupDelay = mgObj.getLong("keepInGroupDelay");
+					keepInGroup4e = mgObj.getBoolean("keepInGroupForever");
+					if(!keepInGroup4e){
+						keepInGroup = mgObj.getBoolean("keepInGroup");
+						if(keepInGroup) keepInGroupDelay = mgObj.getLong("keepInGroupDelay");
+					}
+				}
+				twitchClips = twObj.getBoolean("shareClips");
+				if(twitchClips){
+					JSONObject clipObj = twObj.getJSONObject("shareClipsSettings");
+					clipInterval = clipObj.getString("interval");
+					if(!clipInterval.equalsIgnoreCase("day") && !clipInterval.equalsIgnoreCase("week") && !clipInterval.equalsIgnoreCase("month")) {
+						Main.LOGGER.severe(clipObj.getString("interval") + ": Interval not valid");
+						return false;
+					}
+					clipDay = clipObj.getString("day");
+					clipTrending = clipObj.getBoolean("trending");
 				}
 			}
 			if(config.has("botName")) botName = config.getString("botName"); else {
@@ -176,7 +212,10 @@ public class Settings {
 		return wToken;
 	}
 	public String getTwitchChannel(){
-		return tId;
+		return tLogin;
+	}
+	public String getTwitchUserID(){
+		return tUserId;
 	}
 	public String getManageGroupId(){
 		return manageGroupId;
@@ -186,6 +225,21 @@ public class Settings {
 	}
 	public String getLoginPageLang(){
 		return lang;
+	}
+	public String getClipInterval(){
+		return clipInterval;
+	}
+	public String getClipDay(){
+		return clipDay;
+	}
+	public String getTSecret(){
+		return secret;
+	}
+	public String getRedirectURL(){
+		return redirect + "acceptSub";
+	}
+	public String getLoginURL(){
+		return redirect;
 	}
 	public boolean getPhraseStatus(int type){
 		return phraseStatus[type];
@@ -214,14 +268,29 @@ public class Settings {
 	public boolean getIfManageGroup(){
 		return manageGroup;
 	}
+	public boolean getIfNotifyExpire(){
+		return notifyExpire;
+	}
 	public boolean getIfNotifyBefore(){
 		return notifyBefore;
 	}
 	public boolean getIfKeepInGroup(){
 		return keepInGroup;
 	}
+	public boolean getIfKeepInGroupForever(){
+		return keepInGroup4e;
+	}
 	public boolean getIfMuteUntilLogin(){
 		return muteUntilLogin;
+	}
+	public boolean getIfCheckTwitch(){
+		return checkTwitch;
+	}
+	public boolean getIfShareClips(){
+		return twitchClips;
+	}
+	public boolean getIfClipTrending(){
+		return clipTrending;
 	}
 	public long getOfflineDelay(){
 		return liveOfflineDelay;
@@ -250,6 +319,13 @@ public class Settings {
 	public void setBotName(String name){
 		botName = name;
 	}
+	public boolean checkTwtichLiveType(String type){
+		if(allowedTwitchTypes.size() == 0) return true;
+		for(String s : allowedTwitchTypes)
+			if(type.equals(s))
+				return true;
+		return false;
+	}
 	public String getGoogleApiFullUrl(int n){
 		return "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=" + yId + "&order=date&type=video&key=" + gToken + "&maxResults=" + n;
 	}
@@ -262,10 +338,10 @@ public class Settings {
 			case 0: {method = "streams"; break;}
 			case 1: {method = "channels"; break;}
 		}
-		return "https://api.twitch.tv/kraken/" + method + "/" + tId + "?client_id=" + wToken;
+		return method + "?user_login=" + tLogin;
 	}
 	public String getTwitchClickableTitle(String title){
-		return "<a href=\"https://www.twitch.tv/" + tId + "\">" + FileO.toHtml(title) + "</a>";
+		return "<a href=\"https://www.twitch.tv/" + tLogin + "\">" + FileO.toHtml(title) + "</a>";
 	}
 	public String getUpTime(){
 		return Main.remainTime(startTime);
@@ -274,5 +350,11 @@ public class Settings {
 		String[] s = new String[chats.size()];
 		for(int i = 0; i < s.length; i++) s[i] = chats.get(i).getChatId();
 		return Arrays.toString(s);
+	}
+	public void loadTwitchUserId() throws Exception{
+		tUserId = Download.twitch("users?login=" + getTwitchChannel())
+				.getJSONArray("data")
+				.getJSONObject(0)
+				.getString("id");
 	}
 }

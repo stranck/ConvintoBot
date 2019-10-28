@@ -1,9 +1,10 @@
 package reloaded.convintobot;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Twitch {
-	private boolean goneOnline = true;
+	private boolean goneOnline = true, forceClipUpdate;
 	private int[] messageId;
 	private long liveOffline, notificationCycle;
 	private String title = "", game = "", mText = "";
@@ -14,7 +15,9 @@ public class Twitch {
 		Main.LOGGER.config("Initializing Twitch object");
 		try{
 			if(st.getIfTwitch()){
-				JSONObject stream = new JSONObject(Download.dwn(st.getTwitchUrl(1))); //FARE IN MODO CHE SI PRECARICHI VECCHI TITLE E GAME
+				st.loadTwitchUserId();
+				JSONObject stream = Download.twitchOld("channels/" + st.getTwitchUserID()); //FARE IN MODO CHE SI PRECARICHI VECCHI TITLE E GAME
+				//System.out.println(stream.toString());
 				title = stream.getString("status");
 				game = stream.getString("game");
 			}
@@ -22,16 +25,17 @@ public class Twitch {
 	}
 	
 	public int checkLive(Settings st) throws Exception{
-		JSONObject stream = new JSONObject(Download.dwn(st.getTwitchUrl(0)));
+		JSONArray stream = Download.twitch(st.getTwitchUrl(0)).getJSONArray("data");
 		
 		int ret = 0; //0 = offline; 1 = gone offline; 2 = online; 3 = gone online;
 		
-		if(!stream.isNull("stream")) {
+		if(stream.length() > 0 && st.checkTwtichLiveType(stream.getJSONObject(0).getString("type"))) {
 			if(goneOnline) {
+				JSONObject data = stream.getJSONObject(0);
 				notificationCycle = System.currentTimeMillis();
 				goneOnline = false;
-				game = stream.getJSONObject("stream").getString("game");
-				title = stream.getJSONObject("stream").getJSONObject("channel").getString("status");
+				game = getNameFromId(data.getString("game_id"));
+				title = data.getString("title");
 				ret = 3;
 			} else ret = 2;
 			liveOffline = System.currentTimeMillis();
@@ -41,6 +45,9 @@ public class Twitch {
 		}
 		
 		return ret;
+	}
+	private String getNameFromId(String id) throws Exception{
+		return Download.twitch("games?id=" + id).getString("name");
 	}
 	
 	public String getMText(){
@@ -61,7 +68,13 @@ public class Twitch {
 	public boolean getIfInLive(){
 		return !goneOnline;
 	}
+	public boolean getClipUpdate(){
+		return forceClipUpdate;
+	}
 	
+	public void setClipUpdate(boolean b){
+		forceClipUpdate = b;
+	}
 	public void setMText(String s){
 		mText = s;
 	}
