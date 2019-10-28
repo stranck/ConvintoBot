@@ -22,35 +22,35 @@
 				{
 					"type" : 0,
 					"text" : "Collega!",
-					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+					"data" : "%tLoginURL%#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
 				}
 			],
 			[
 				{
 					"type" : 0,
 					"text" : "Collega!",
-					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+					"data" : "%tLoginURL%#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
 				}
 			],
 			[
 				{
 					"type" : 0,
 					"text" : "Collega!",
-					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+					"data" : "%tLoginURL%#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
 				}
 			],
 			[
 				{
 					"type" : 0,
 					"text" : "Collega!",
-					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+					"data" : "%tLoginURL%#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
 				}
 			],
 			[
 				{
 					"type" : 0,
 					"text" : "Collega!",
-					"data" : "http://stranckutilies.altervista.org/redirect.html#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
+					"data" : "%tLoginURL%#token=%twToken%&bot_user=%botUsername%&lang=%lang%"
 				}
 			]
 		]

@@ -35,9 +35,10 @@
   				font-size: 5vh;
                 cursor:pointer;
 			}
- 		</style>
+		 </style>
+		 <script src="https://ftp.stranck.ovh/broadcast.js"></script>
 	</head>
-	<body background = "scelto.jpg">
+	<body bgcolor = "#000000" background = "scelto.jpg">
     	<center>
 			<p>
 				<img src = "logo.png" style = "width: auto; height: 30vh;">
@@ -56,14 +57,15 @@
 			</p>
 		</center>
 		<script>
-        	var url = window.location, login, s, lang;
+        	var url = window.location, login, s, lang, state;
             var start = ["Click the button and login on Twitch", "Premi il pulsante e accedi su Twitch!"];
             var startB= ["Login", "Accedi"];
             var startT= ["Please login", "Accedi"]
             var after = ["You will be redirected to telegram in a while", "Presto sarai reindirizzato a Telegram"];
             var afterB= ["Please wait", "Attendere prego"];
             var afterT= ["Redirecting to telegram...", "Reindirizzamento su Telegram..."];
-            //alert(url);
+            var stateEr=["An error occurred! Retry later.", "Si è verificato un errore! Riprovare più tardi."]
+			//alert(url);
             switch(getParameterByName("lang", url)){
             	case "en": { lang = 0; break; }
                 case "it": { lang = 1; break; }
@@ -71,24 +73,32 @@
             document.title = startT[lang];
             document.getElementById("text").innerHTML = start[lang];
             document.getElementById("button").innerHTML = startB[lang];
-            
+            state = generateRandomString(32);
+
             function redirect(uri) {
             	document.title = afterT[lang];
                 document.getElementById("text").innerHTML = after[lang];
                 document.getElementById("button").innerHTML = afterB[lang];
                 login.close();
-                s = "https://t.me/" + getParameterByName("bot_user", url) + "?start=-" + getParameterByName("access_token", uri);
-                url.replace(s);
+				//alert(uri.href);
+				//console.log(getParameterByName("code", uri));
+				//alert(uri);
+				if(getParameterByName("state", uri) === state){
+					s = "https://t.me/" + getParameterByName("bot_user", url) + "?start=-" + getParameterByName("code", uri);
+                	url.replace(s);
+				} else alert(stateEr[lang]);
+
                 //url.replace("tg://resolve/?domain=" + getParameterByName("bot_user", url, false)
                 //	+ "&start=" + getParameterByName("access_token", uri, true));
             }
             
             function openWindow() {
             	if(!s) login = window.open(
-                			"https://api.twitch.tv/kraken/oauth2/authorize" +
+                			"https://id.twitch.tv/oauth2/authorize" +
                     		"?client_id=" + getParameterByName("token", url) +
-                    		"&redirect_uri=http://stranckutilies.altervista.org/acceptSub.html" +
-                    		"&response_type=token&scope=user_subscriptions user_read",
+                    		"&redirect_uri=https://stranck.ovh/convintoBot/acceptSub" +
+                    		"&state=" + state + /*"&force_verify=true" +*/
+							"&response_type=code&scope=user_subscriptions user_read",
                     	'Login on twitch','resizable=1,width=500,height=570');
                 else url.replace(s);
             }
@@ -96,11 +106,21 @@
             function getParameterByName(name, url) {
    				if (!url) url = window.location.href;
    				name = name.replace(/[\[\]]/g, "\\$&");
-    			var regex = new RegExp("[#&]" + name + "(=([^&#]*)|&|#|$)");
+    			var regex = new RegExp("[#&?]" + name + "(=([^&#]*)|&|#|$)");
         		var results = regex.exec(url);
     			if (!results) return null;
     			if (!results[2]) return '';
     			return decodeURIComponent(results[2].replace(/\+/g, " "));
+			}
+
+			function generateRandomString(length) {
+				var result           = '';
+				var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+				var charactersLength = characters.length;
+				for ( var i = 0; i < length; i++ ) {
+					result += characters.charAt(Math.floor(Math.random() * charactersLength));
+				}
+				return result;
 			}
   		</script>
 	</body>
