@@ -3,6 +3,8 @@ This Bot sends notifications to your Telegram Channel when a new YouTube video i
 
 With the last update it also include optional Twitch notifications for Live Streaming and the awesome **Subscribers Group Manager** function! 
 
+###### This bot is really old, and its code it's absolutely shit. I started writing it when I first met OOB programming. It needs a complete rewrite, but I don't have enough time. Btw I'm adding instagram support. DM me (www.stranck.ovh) for more info about its functionalities
+
 ## Changelog
 
 **2017-08-23**
@@ -16,7 +18,7 @@ With the last update it also include optional Twitch notifications for Live Stre
 * **Added Twitch Live Notifications Support**
 
 
-Made by Stranck [Anal team]: https://youtube.com/channel/UCmMWUz0QZ7WhIBx-1Dz-IGg
+Made by Stranck: https://stranck.ovh
 
 ZombieBest's (https://youtube.com/c/ZombieBestOfficial) Telegram Channel: https://telegram.me/ZombieTheBest
 
